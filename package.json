@@ -1,0 +1,48 @@
+{
+  "name": "rapidmedi-store",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start --host lan",
+    "start:clean": "expo start --host lan --clear",
+    "android": "expo start --android --host lan",
+    "ios": "expo start --ios --host lan",
+    "web": "expo start --web",
+    "ts.check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native-stack": "^6.11.0",
+    "@tanstack/react-query": "^5.51.1",
+    "crypto-js": "^4.2.0",
+    "expo": "~57.0.10",
+    "expo-av": "~14.0.7",
+    "expo-constants": "~57.0.9",
+    "expo-device": "~57.0.1",
+    "expo-firebase-recaptcha": "^2.3.1",
+    "expo-haptics": "~57.0.1",
+    "expo-image-picker": "~57.0.7",
+    "expo-keep-awake": "~57.0.1",
+    "expo-notifications": "~57.0.8",
+    "expo-status-bar": "~57.0.1",
+    "firebase": "^10.12.5",
+    "react": "19.2.3",
+    "react-hook-form": "^7.52.1",
+    "react-native": "0.86.2",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-webview": "13.16.1",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@types/react": "~19.2.4",
+    "typescript": "~6.0.3"
+  },
+  "private": true
+}

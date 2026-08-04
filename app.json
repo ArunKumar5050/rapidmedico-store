@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "Rapidmedi Store",
+    "slug": "rapidmedi-store",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "rapidmedi-store",
+    "updates": {
+      "enabled": false
+    },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F9D6C"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.rapidmedi.store",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Rapidmedi needs camera access to capture your documents and medicine photos.",
+        "NSPhotoLibraryUsageDescription": "Rapidmedi needs gallery access to attach an existing photo."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F9D6C"
+      },
+      "package": "com.rapidmedi.store",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "NOTIFICATIONS",
+        "VIBRATE",
+        "WAKE_LOCK"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0F9D6C"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Rapidmedi needs gallery access to attach an existing photo.",
+          "cameraPermission": "Rapidmedi needs camera access to capture your documents and medicine photos."
+        }
+      ]
+    ],
+    "extra": {
+      "firebaseApiKey": "AIzaSyDoqbjpy3pFiuvMCBhxffJH27bHBNaKTTA",
+      "firebaseAuthDomain": "rapidmedi.firebaseapp.com",
+      "firebaseProjectId": "rapidmedi",
+      "firebaseStorageBucket": "rapidmedi.firebasestorage.app",
+      "firebaseMessagingSenderId": "553213794552",
+      "firebaseAppId": "1:553213794552:web:db1bdac54f2a80d791430d",
+      "firebaseMeasurementId": "G-71EYHYR629"
+    }
+  }
+}
