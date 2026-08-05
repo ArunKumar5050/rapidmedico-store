@@ -1423,3 +1423,171 @@
 {"_e":"metro:client_log","_t":1785867845258,"level":"warn","data":["[AuthService] sendOtp error:","[FirebaseError: Firebase: SMS unable to be sent until this region enabled by the app developer. (auth/operation-not-allowed).]"]}
 {"_e":"metro:client_log","_t":1785867971818,"level":"error","data":["[AuthService] verifyOtp error:","[FirebaseError: Firebase: Error (auth/invalid-verification-code).]"]}
 {"_e":"metro:client_log","_t":1785868044920,"level":"error","data":["[AuthService] verifyOtp error:","[FirebaseError: Firebase: Error (auth/invalid-verification-code).]"]}
+{"_e":"metro:bundling:started","_t":1785906477315,"id":"m","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785906477315,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906477325,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906477466,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906478649,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906478748,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906478917,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479027,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479170,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479298,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479412,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479545,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479695,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479807,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906479929,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480047,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480162,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480262,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480362,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480473,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480573,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480674,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480773,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480874,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906480974,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481075,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481179,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481279,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481379,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481510,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481609,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481711,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481835,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906481976,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482076,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482176,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482279,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482380,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482496,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482598,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482699,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482823,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906482926,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483028,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483129,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483230,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483331,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483430,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483533,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483634,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483734,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483835,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906483939,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484040,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484141,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484244,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484346,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484456,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484556,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484692,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484792,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484892,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906484994,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485094,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485213,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485320,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485420,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485532,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485658,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485797,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485898,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906485998,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486100,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486200,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486300,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486402,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486502,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486685,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486793,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906486895,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906487009,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785906487821,"id":"m","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785906487975,"id":"m","total":1,"ms":10659.2071}
+{"_e":"metro:client_log","_t":1785906490380,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785906490381,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785906490710,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785906491527,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:client_log","_t":1785906510989,"level":"error","data":["[AuthService] verifyOtp error:","[FirebaseError: Firebase: Error (auth/invalid-verification-code).]"]}
+{"_e":"metro:bundling:started","_t":1785907646857,"id":"u","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785907646858,"id":"u","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785907646859,"id":"u","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785907647014,"id":"u","total":1,"ms":156.557}
+{"_e":"metro:client_log","_t":1785907649549,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785907649549,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785907649891,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785907650377,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:client_log","_t":1785908255530,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785908255606,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:bundling:started","_t":1785908637262,"id":"12","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785908637262,"id":"12","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785908637342,"id":"12","total":1,"ms":80.2714}
+{"_e":"metro:client_log","_t":1785908639936,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785908639936,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785908639936,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785908640282,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785908640780,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"root:init","_t":1785908725428,"format":"v0-jsonl","version":"57.0.12"}
+{"_e":"env:mode","_t":1785908725430,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1785908725439,"mode":"development","files":["../..\\..\\.env.local"],"env":{"REACT_NATIVE_PACKAGER_HOSTNAME":"192.168.219.27"}}
+{"_e":"devserver:start","_t":1785908727245,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1785908728947,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1785908730975,"plugins":[]}
+{"_e":"metro:instantiate","_t":1785908747993,"atlas":false,"workers":10,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1785908757393,"id":"4","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785908757394,"id":"4","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785908763602,"id":"4","total":1,"ms":6208.3594}
+{"_e":"metro:client_log","_t":1785908766157,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785908766157,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785908766157,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785908766515,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785908767031,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:bundling:started","_t":1785908864471,"id":"8","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785908864471,"id":"8","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785908864556,"id":"8","total":1,"ms":85.0037}
+{"_e":"metro:client_log","_t":1785908867842,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785908867842,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785908867842,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785908867844,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785908868036,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:bundling:started","_t":1785909143094,"id":"d","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785909143094,"id":"d","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785909143177,"id":"d","total":1,"ms":82.8774}
+{"_e":"metro:bundling:started","_t":1785909150408,"id":"g","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785909150408,"id":"g","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785909150487,"id":"g","total":1,"ms":78.6933}
+{"_e":"metro:client_log","_t":1785909153000,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785909153000,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785909153001,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785909153324,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785909153711,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:client_log","_t":1785909305522,"level":"error","data":["Project is incompatible with this version of Expo Go\n\nThis project requires a newer version of Expo Go.\n\nHow to fix this error:\nDownload the latest version of Expo Go from the Play Store."]}
+{"_e":"metro:bundling:started","_t":1785909378794,"id":"n","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785909378794,"id":"n","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785909378876,"id":"n","total":1,"ms":81.5175}
+{"_e":"metro:client_log","_t":1785909382899,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785909382899,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785909382899,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785909383477,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785909384258,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:bundling:started","_t":1785909679181,"id":"t","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785909679181,"id":"t","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785909679358,"id":"t","total":1,"ms":177.0731}
+{"_e":"metro:client_log","_t":1785909683047,"level":"warn","data":["No native ExponentConstants module found, are you sure the expo-constants's module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785909683048,"level":"warn","data":["No native ExpoFirebaseCore module found, are you sure the expo-firebase-core module is linked properly?"]}
+{"_e":"metro:client_log","_t":1785909683048,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785909683614,"level":"warn","data":["SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context"]}
+{"_e":"metro:client_log","_t":1785909684443,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:client_log","_t":1785910011642,"level":"warn","data":["[Inventory] Failed to update Firestore, queued locally:","[FirebaseError: No document to update: projects/rapidmedi/databases/(default)/documents/stores/store_sim_595787/inventory/2]"]}
+{"_e":"metro:bundling:started","_t":1785927990309,"id":"10","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1785927990311,"id":"10","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785927990866,"id":"10","total":1,"ms":554.9811}
+{"_e":"metro:client_log","_t":1785927994641,"level":"warn","data":["[OrderAlertService] Could not load expo-av Audio module:","[Error: Cannot find native module 'ExponentAV']"]}
+{"_e":"metro:client_log","_t":1785927995957,"level":"log","data":["[OrderAlertService] Notification channel init skipped in Expo Go"]}
+{"_e":"metro:client_log","_t":1785929960117,"level":"error","data":["[AuthService] registerWithEmail error:","[FirebaseError: Firebase: Error (auth/email-already-in-use).]"]}
+{"_e":"metro:client_log","_t":1785929983549,"level":"error","data":["[AuthService] registerWithEmail error:","[FirebaseError: Firebase: Error (auth/email-already-in-use).]"]}
+{"_e":"metro:client_log","_t":1785930008183,"level":"error","data":["The action 'REPLACE' with payload {\"name\":\"Main\"} was not handled by any navigator.\n\nDo you have a screen named 'Main'?\n\nIf you're trying to navigate to a screen in a nested navigator, see https://reactnavigation.org/docs/nesting-navigators#navigating-to-a-screen-in-a-nested-navigator.\n\nThis is a development-only warning and won't be shown in production."]}
+{"_e":"metro:client_log","_t":1785930032175,"level":"error","data":["The action 'REPLACE' with payload {\"name\":\"KycPending\"} was not handled by any navigator.\n\nDo you have a screen named 'KycPending'?\n\nIf you're trying to navigate to a screen in a nested navigator, see https://reactnavigation.org/docs/nesting-navigators#navigating-to-a-screen-in-a-nested-navigator.\n\nThis is a development-only warning and won't be shown in production."]}
+{"_e":"metro:client_log","_t":1785930035093,"level":"error","data":["The action 'REPLACE' with payload {\"name\":\"Main\"} was not handled by any navigator.\n\nDo you have a screen named 'Main'?\n\nIf you're trying to navigate to a screen in a nested navigator, see https://reactnavigation.org/docs/nesting-navigators#navigating-to-a-screen-in-a-nested-navigator.\n\nThis is a development-only warning and won't be shown in production."]}

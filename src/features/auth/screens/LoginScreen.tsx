@@ -4,44 +4,66 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import { Button } from '../../../components/ui/Button';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { KycStatus, AvailabilityStatus } from '../../../types/enums';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { useRef } from 'react';
-import app from '../../../services/firebase/config';
+import { KycStatus } from '../../../types/enums';
 import { AuthService } from '../../../services/firebase/auth';
+import { FirestoreService } from '../../../services/firebase/firestore';
 
 export const LoginScreen = ({ navigation }: any) => {
-  const [phone, setPhone] = useState('+91');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { setStore, setAuthUser } = useAuthStore();
-  const recaptchaVerifier = useRef(null);
 
   const handleLogin = async () => {
-    if (phone.length < 10) {
-      Alert.alert('Invalid Phone', 'Please enter a valid phone number with country code (e.g. +919876543210).');
+    if (!email || !password) {
+      Alert.alert('Invalid Input', 'Please enter both email and password.');
       return;
     }
 
     setLoading(true);
     try {
-      const success = await AuthService.sendOtp(phone, recaptchaVerifier.current);
-      setLoading(false);
-      if (success) {
-        navigation.navigate('OtpVerification', { phone, isLogin: true });
+      // 1. Authenticate with Firebase
+      const user = await AuthService.loginWithEmail(email.trim(), password);
+      
+      // 2. Fetch Store Profile
+      const existingStore = await FirestoreService.getStoreProfile(user.uid);
+
+      if (existingStore) {
+        setAuthUser(user.uid, email.trim());
+        setStore(existingStore);
+        setLoading(false);
+
+        if (existingStore.kycStatus === KycStatus.Approved) {
+          navigation.replace('Main');
+        } else {
+          navigation.replace('KycPending');
+        }
+      } else {
+        setLoading(false);
+        // If they authenticated but have no store profile, it's an invalid state.
+        Alert.alert(
+          'Store Not Found',
+          'No pharmacy store profile found for this account. Please register your store first.',
+          [
+            { text: 'Register Now', onPress: () => navigation.navigate('StoreRegistration') },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
       }
     } catch (error: any) {
       setLoading(false);
-      Alert.alert('Login Error', error.message || 'Unable to proceed to OTP verification');
+      let errorMsg = 'Unable to login. Please check your credentials.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMsg = 'Invalid email or password.';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      Alert.alert('Login Error', errorMsg);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={app.options}
-        attemptInvisibleVerification
-      />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Text style={styles.title}>Rapidmedi Partner</Text>
@@ -49,13 +71,25 @@ export const LoginScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Phone Number</Text>
+          <Text style={styles.label}>Email Address</Text>
           <TextInput
             style={styles.input}
-            placeholder="+919876543210"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
+            placeholder="owner@pharmacy.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+        </View>
+
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
         </View>
 
@@ -90,7 +124,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.secondary,
     borderRadius: 12,
     padding: spacing.md,
-    ...typography.h3,
+    ...typography.body,
     borderWidth: 1,
     borderColor: colors.border.default,
   },

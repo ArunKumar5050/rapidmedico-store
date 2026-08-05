@@ -4,9 +4,16 @@ import { RejectionReason } from '../types/enums';
 export const StoreRegistrationSchema = z.object({
   businessName: z.string().min(2, 'Business Name must be at least 2 characters').max(100),
   ownerName: z.string().min(2, 'Owner Name must be at least 2 characters').max(50),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   phone: z.string().regex(/^\+\d{10,15}$/, 'Phone must be valid E.164 format (e.g. +919876543210)'),
   category: z.enum(['PHARMACY', 'MEDICAL_STORE', 'CHEMIST']),
+  streetAddress: z.string().min(5, 'Street address must be at least 5 characters'),
   city: z.string().min(2, 'City name is required'),
+  state: z.string().min(2, 'State is required'),
+  pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits'),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 export type StoreRegistrationInput = z.infer<typeof StoreRegistrationSchema>;

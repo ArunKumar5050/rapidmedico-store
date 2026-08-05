@@ -56,7 +56,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         total += price * item.quantity;
       }
     });
-    return total;
+    return total + 200; // Adding 200 delivery charge
   };
 
   const handlePrimaryAction = async () => {
@@ -174,6 +174,13 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
               )}
             </View>
           ))}
+          
+          <View style={[styles.totalRow, { borderTopWidth: 0, marginTop: 0, paddingTop: 0 }]}>
+            <Text style={[styles.totalLabel, { fontSize: 14, color: '#666' }]}>Delivery Charge:</Text>
+            <Text style={[styles.totalAmount, { fontSize: 14, color: '#666' }]}>
+               ₹200.00
+            </Text>
+          </View>
           
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Grand Total:</Text>

@@ -1,17 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import { Button } from '../../../components/ui/Button';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { FirestoreService } from '../../../services/firebase/firestore';
 
 export const StoreSettingsScreen = ({ navigation }: any) => {
-  const [businessName, setBusinessName] = useState('Apollo Pharmacy Indiranagar');
-  const [category, setCategory] = useState('PHARMACY');
+  const { store, storeId, setStore } = useAuthStore();
+  const [businessName, setBusinessName] = useState(store?.businessName || '');
+  const [category, setCategory] = useState(store?.category || 'PHARMACY');
   const [soundPref, setSoundPref] = useState('Loud Siren (Default)');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    Alert.alert('Settings Saved', 'Store settings updated successfully.');
-    navigation.goBack();
+  useEffect(() => {
+    if (store) {
+      setBusinessName(store.businessName);
+      setCategory(store.category || 'PHARMACY');
+    }
+  }, [store]);
+
+  const handleSave = async () => {
+    if (!businessName) {
+      Alert.alert('Required Field', 'Business name cannot be empty.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (storeId) {
+        await FirestoreService.createStoreProfile({
+          storeId,
+          businessName,
+          category,
+        });
+        if (store) {
+          setStore({ ...store, businessName, category });
+        }
+      }
+      setSaving(false);
+      Alert.alert('Settings Saved', 'Store settings updated successfully.');
+      navigation.goBack();
+    } catch (err: any) {
+      setSaving(false);
+      Alert.alert('Save Failed', err.message || 'Unable to update store settings.');
+    }
   };
 
   return (
@@ -40,7 +73,7 @@ export const StoreSettingsScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-        <Button title="SAVE SETTINGS" size="large" onPress={handleSave} style={{ marginTop: spacing.md }} />
+        <Button title="SAVE SETTINGS" size="large" loading={saving} onPress={handleSave} style={{ marginTop: spacing.md }} />
       </ScrollView>
     </SafeAreaView>
   );

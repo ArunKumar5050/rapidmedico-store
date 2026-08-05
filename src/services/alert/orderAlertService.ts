@@ -6,12 +6,10 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 let Audio: any = null;
-if (!isExpoGo) {
-  try {
-    Audio = require('expo-av').Audio;
-  } catch (e) {
-    console.warn('[OrderAlertService] Could not load expo-av Audio module:', e);
-  }
+try {
+  Audio = require('expo-av').Audio;
+} catch (e) {
+  console.warn('[OrderAlertService] Could not load expo-av Audio module:', e);
 }
 
 export interface AlertOrderPayload {

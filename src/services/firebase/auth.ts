@@ -4,11 +4,33 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
   User,
-  ConfirmationResult
+  ConfirmationResult,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
 } from 'firebase/auth';
 
 export class AuthService {
   private static confirmationResult: ConfirmationResult | null = null;
+
+  static async registerWithEmail(email: string, password: string): Promise<User> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error('[AuthService] registerWithEmail error:', error);
+      throw error;
+    }
+  }
+
+  static async loginWithEmail(email: string, password: string): Promise<User> {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error('[AuthService] loginWithEmail error:', error);
+      throw error;
+    }
+  }
 
   static async sendOtp(phoneNumber: string, recaptchaVerifier?: any): Promise<boolean> {
     try {

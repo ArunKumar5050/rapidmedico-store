@@ -5,8 +5,19 @@ export interface Store {
   businessName: string;
   ownerName: string;
   phone: string;
+  email?: string;
   category: StoreCategory | string;
+  streetAddress?: string;
   city: string;
+  state?: string;
+  pincode?: string;
+  latitude?: number;
+  longitude?: number;
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
   kycStatus: KycStatus;
   availability: AvailabilityStatus;
   workingHours: { [day: string]: { open: string; close: string; closed: boolean } };

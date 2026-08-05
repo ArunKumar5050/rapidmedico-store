@@ -11,10 +11,12 @@ import { PerformanceDashboardScreen } from '../../features/profile/screens/Perfo
 import { RatingsScreen } from '../../features/profile/screens/RatingsScreen';
 import { SupportScreen } from '../../features/support/screens/SupportScreen';
 import { AnnouncementsScreen } from '../../features/support/screens/AnnouncementsScreen';
+import { useOrderQueue } from '../../hooks/useOrderQueue';
 
 const Stack = createNativeStackNavigator();
 
 export const MainNavigator = () => {
+  useOrderQueue(); // Automatically listen to queue and trigger alerts when inside Main
   return (
     <Stack.Navigator screenOptions={{ headerShown: true }}>
       <Stack.Screen name="MainTabs" component={TabNavigator} options={{ headerShown: false }} />

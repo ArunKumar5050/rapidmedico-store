@@ -26,6 +26,25 @@ export class FirestoreService {
     return { storeId: snap.id, ...snap.data() } as Store;
   }
 
+  static async createStoreUser(uid: string, storeId: string, email: string, role: string = 'OWNER'): Promise<void> {
+    const docRef = doc(db, 'store_users', uid);
+    await setDoc(docRef, {
+      uid,
+      storeId,
+      email,
+      role,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  static async getStoreUser(uid: string): Promise<any | null> {
+    const docRef = doc(db, 'store_users', uid);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
+    return snap.data();
+  }
+
   static async createStoreProfile(storeData: Partial<Store> & { storeId: string }): Promise<void> {
     const docRef = doc(db, 'stores', storeData.storeId);
     await setDoc(docRef, {
@@ -71,15 +90,32 @@ export class FirestoreService {
             mappedStatus = OrderStatus.Completed;
           }
 
+          // Map CustomOrder medicines array to StoreOrder items array
+          let orderItems = data.items;
+          if (!orderItems && data.medicines && Array.isArray(data.medicines)) {
+            orderItems = data.medicines.map((med: string, index: number) => ({
+              medicineId: `med-${index}`,
+              name: med,
+              quantity: 1,
+              price: data.price || 0
+            }));
+          } else if (!orderItems) {
+            orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }];
+          }
+
+          const assignedAtIso = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
+          const respondByAtIso = new Date(new Date(assignedAtIso).getTime() + 90000).toISOString();
+          
           return {
             id: docSnap.id,
             customerFirstName: data.userName || 'Customer',
             customerLastName: '',
             status: mappedStatus,
-            items: data.items || [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }],
+            items: orderItems,
             prescriptionUrls: data.prescriptionUrls || [],
             totalAmount: data.billAmount,
-            assignedAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            assignedAt: assignedAtIso,
+            respondByAt: respondByAtIso,
             _storeId: data.storeId // to filter
           } as StoreOrder & { _storeId?: string };
         })
@@ -102,14 +138,28 @@ export class FirestoreService {
       let orders = snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
           let mappedStatus = data.storeStatus as OrderStatus || OrderStatus.Completed;
+          // Map CustomOrder medicines array to StoreOrder items array
+          let orderItems = data.items;
+          if (!orderItems && data.medicines && Array.isArray(data.medicines)) {
+            orderItems = data.medicines.map((med: string, index: number) => ({
+              medicineId: `med-${index}`,
+              name: med,
+              quantity: 1,
+              price: data.price || 0
+            }));
+          } else if (!orderItems) {
+            orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }];
+          }
+
           return {
             id: docSnap.id,
             customerFirstName: data.userName || 'Customer',
             customerLastName: '',
             status: mappedStatus,
-            items: data.items || [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }],
+            items: orderItems,
             totalAmount: data.billAmount,
-            assignedAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()
+            assignedAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            respondByAt: new Date(Date.now() + 10 * 60000).toISOString() // Fake timeout
           } as StoreOrder;
       }).filter(o => [OrderStatus.Completed, OrderStatus.Rejected, OrderStatus.TimedOut].includes(o.status));
 
@@ -120,8 +170,16 @@ export class FirestoreService {
 
   static async updateOrderBill(storeId: string, orderId: string, items: any[], totalAmount: number): Promise<void> {
     const docRef = doc(db, 'customOrders', orderId);
+    
+    const itemizedBill = items.map(item => ({
+      medicine: item.name,
+      price: item.price * (item.quantity || 1)
+    }));
+
     await updateDoc(docRef, {
       items,
+      itemizedBill,
+      deliveryCharge: 200,
       billAmount: totalAmount,
       storeId, // Lock the order to this store
       billGeneratedAt: new Date().toISOString(),

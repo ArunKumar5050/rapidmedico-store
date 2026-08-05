@@ -1,23 +1,39 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import { AvailabilityToggle } from '../../../components/ui/AvailabilityToggle';
 import { Card } from '../../../components/ui/Card';
 import { AvailabilityStatus } from '../../../types/enums';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { FirestoreService } from '../../../services/firebase/firestore';
 
 export const DashboardScreen = ({ navigation }: any) => {
-  const [availability, setAvailability] = useState(AvailabilityStatus.Online);
+  const { store, storeId, setAvailability } = useAuthStore();
+  const availability = store?.availability || AvailabilityStatus.Offline;
+
+  const handleToggleAvailability = (newStatus: AvailabilityStatus) => {
+    setAvailability(newStatus);
+    if (storeId) {
+      FirestoreService.updateStoreAvailability(storeId, newStatus).catch((err) =>
+        console.warn('[DashboardScreen] Availability update error:', err)
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.storeName}>Apollo Pharmacy</Text>
-            <Text style={styles.storeLocation}>Indiranagar, Bengaluru</Text>
+          <View style={{ flex: 1, marginRight: spacing.sm }}>
+            <Text style={styles.storeName} numberOfLines={1}>
+              {store?.businessName || 'Pharmacy Store'}
+            </Text>
+            <Text style={styles.storeLocation}>
+              {store?.city ? `${store.city}` : 'Partner Store'}
+            </Text>
           </View>
-          <AvailabilityToggle status={availability} onToggle={setAvailability} />
+          <AvailabilityToggle status={availability} onToggle={handleToggleAvailability} />
         </View>
 
         <Card style={styles.summaryCard}>

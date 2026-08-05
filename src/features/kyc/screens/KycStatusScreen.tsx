@@ -10,18 +10,12 @@ import { FirestoreService } from '../../../services/firebase/firestore';
 
 export const KycStatusScreen = ({ navigation }: any) => {
   const { store, storeId, setKycStatus } = useAuthStore();
-  const [docStatuses, setDocStatuses] = useState<any[]>([
-    { type: 'Drug License', status: 'APPROVED', expiryDate: '2028-12-31' },
-    { type: 'PAN Card', status: 'APPROVED' },
-    { type: 'Aadhaar Card', status: 'APPROVED' },
-    { type: 'Bank Account & Cheque', status: 'APPROVED' },
-    { type: 'Shop Front Photo', status: 'APPROVED' },
-  ]);
+  const [docStatuses, setDocStatuses] = useState<any[]>([]);
 
   useEffect(() => {
     if (storeId) {
       const unsub = FirestoreService.subscribeKycDocs(storeId, (docs) => {
-        if (docs && docs.length > 0) {
+        if (docs) {
           setDocStatuses(docs);
         }
       });
@@ -30,10 +24,10 @@ export const KycStatusScreen = ({ navigation }: any) => {
   }, [storeId]);
 
   const isApproved = store?.kycStatus === KycStatus.Approved;
+  const isNotStarted = store?.kycStatus === KycStatus.NotStarted || (!isApproved && docStatuses.length === 0);
 
   const handleSimulateApproval = () => {
     setKycStatus(KycStatus.Approved);
-    navigation.replace('Main');
   };
 
   return (
@@ -41,48 +35,67 @@ export const KycStatusScreen = ({ navigation }: any) => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.statusHeader}>
           <Badge
-            label={isApproved ? 'KYC APPROVED' : 'KYC UNDER REVIEW'}
-            status={isApproved ? KycStatus.Approved : KycStatus.PendingReview}
+            label={isApproved ? 'KYC APPROVED' : isNotStarted ? 'KYC NOT STARTED' : 'KYC UNDER REVIEW'}
+            status={isApproved ? KycStatus.Approved : isNotStarted ? KycStatus.NotStarted : KycStatus.PendingReview}
           />
           <Text style={styles.title}>
-            {isApproved ? 'Pharmacy Account Active' : 'Verification In Progress'}
+            {isApproved
+              ? 'Pharmacy Account Active'
+              : isNotStarted
+              ? 'KYC Verification Required'
+              : 'Verification In Progress'}
           </Text>
           <Text style={styles.subtitle}>
             {isApproved
               ? 'Your pharmacy is fully verified and ready to accept delivery orders.'
+              : isNotStarted
+              ? 'Please submit your Drug License, PAN, Aadhaar, Bank Details, and Shop photo to get verified.'
               : 'Our operations team is verifying your license and tax records. Estimated turnaround: 2-4 hours.'}
           </Text>
         </View>
 
+        {isNotStarted && (
+          <Button
+            title="FILL & UPLOAD KYC DOCUMENTS"
+            size="large"
+            onPress={() => navigation.navigate('KycUploadWizard')}
+            style={{ marginBottom: spacing.lg }}
+          />
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Uploaded Documents Status</Text>
-          {docStatuses.map((docItem, idx) => (
-            <View key={idx} style={styles.docRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.docName}>{docItem.type}</Text>
-                {docItem.expiryDate && (
-                  <Text style={styles.expiryText}>Expires: {docItem.expiryDate}</Text>
-                )}
-                {docItem.rejectionReason && (
-                  <Text style={styles.rejectionReason}>Reason: {docItem.rejectionReason}</Text>
-                )}
+          {docStatuses.length === 0 ? (
+            <Text style={styles.expiryText}>No documents uploaded yet. Tap the button above to upload.</Text>
+          ) : (
+            docStatuses.map((docItem, idx) => (
+              <View key={idx} style={styles.docRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.docName}>{docItem.type}</Text>
+                  {docItem.expiryDate && (
+                    <Text style={styles.expiryText}>Expires: {docItem.expiryDate}</Text>
+                  )}
+                  {docItem.rejectionReason && (
+                    <Text style={styles.rejectionReason}>Reason: {docItem.rejectionReason}</Text>
+                  )}
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Badge
+                    label={docItem.status}
+                    status={docItem.status === 'APPROVED' ? KycStatus.Approved : KycStatus.PendingReview}
+                  />
+                  {docItem.status === 'REJECTED' && (
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('KycReupload', { docType: docItem.type })}
+                      style={styles.reuploadBtn}
+                    >
+                      <Text style={styles.reuploadText}>Re-upload</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Badge
-                  label={docItem.status}
-                  status={docItem.status === 'APPROVED' ? KycStatus.Approved : KycStatus.PendingReview}
-                />
-                {docItem.status === 'REJECTED' && (
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('KycReupload', { docType: docItem.type })}
-                    style={styles.reuploadBtn}
-                  >
-                    <Text style={styles.reuploadText}>Re-upload</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
 
         {!isApproved && (

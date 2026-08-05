@@ -17,18 +17,16 @@ export const RootNavigator = () => {
   const { isAuthenticated, store, isLoading } = useAuthStore();
   const { activeAlertOrder, setActiveAlertOrder } = useOrderStore();
 
-  const getInitialRouteName = () => {
-    if (!isAuthenticated) return 'Auth';
-    if (!store || store.kycStatus !== KycStatus.Approved) return 'KycPending';
-    return 'Main';
-  };
-
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={getInitialRouteName()}>
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-        <Stack.Screen name="KycPending" component={KycPendingNavigator} />
-        <Stack.Screen name="Main" component={MainNavigator} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!isAuthenticated ? (
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        ) : !store || store.kycStatus !== KycStatus.Approved ? (
+          <Stack.Screen name="KycPending" component={KycPendingNavigator} />
+        ) : (
+          <Stack.Screen name="Main" component={MainNavigator} />
+        )}
       </Stack.Navigator>
 
       <FullScreenOrderAlertModal
