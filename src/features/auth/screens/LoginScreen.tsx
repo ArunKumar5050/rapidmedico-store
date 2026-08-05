@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import { Button } from '../../../components/ui/Button';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { KycStatus } from '../../../types/enums';
 import { AuthService } from '../../../services/firebase/auth';
 import { FirestoreService } from '../../../services/firebase/firestore';
 
@@ -31,15 +30,8 @@ export const LoginScreen = ({ navigation }: any) => {
       if (existingStore) {
         setAuthUser(user.uid, email.trim());
         setStore(existingStore);
-        setLoading(false);
-
-        if (existingStore.kycStatus === KycStatus.Approved) {
-          navigation.replace('Main');
-        } else {
-          navigation.replace('KycPending');
-        }
+        // RootNavigator's conditional rendering will auto-switch to KycPending or Main stack
       } else {
-        setLoading(false);
         // If they authenticated but have no store profile, it's an invalid state.
         Alert.alert(
           'Store Not Found',
@@ -51,7 +43,6 @@ export const LoginScreen = ({ navigation }: any) => {
         );
       }
     } catch (error: any) {
-      setLoading(false);
       let errorMsg = 'Unable to login. Please check your credentials.';
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         errorMsg = 'Invalid email or password.';
@@ -59,6 +50,8 @@ export const LoginScreen = ({ navigation }: any) => {
         errorMsg = error.message;
       }
       Alert.alert('Login Error', errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 

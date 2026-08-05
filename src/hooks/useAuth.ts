@@ -8,8 +8,10 @@ export const useAuth = () => {
 
   useEffect(() => {
     const unsubscribe = AuthService.onAuthStateChanged(async (user) => {
-      if (user && user.phoneNumber) {
-        setAuthUser(user.uid, user.phoneNumber);
+      if (user) {
+        // Support both Email/Password and Phone auth users
+        const identifier = user.email || user.phoneNumber || user.uid;
+        setAuthUser(user.uid, identifier);
         const storeProfile = await FirestoreService.getStoreProfile(user.uid);
         setStore(storeProfile);
       } else {
