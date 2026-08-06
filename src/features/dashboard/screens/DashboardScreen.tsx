@@ -8,9 +8,22 @@ import { AvailabilityStatus } from '../../../types/enums';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { FirestoreService } from '../../../services/firebase/firestore';
 
+import { useOrderStore } from '../../../store/useOrderStore';
+
 export const DashboardScreen = ({ navigation }: any) => {
   const { store, storeId, setAvailability } = useAuthStore();
+  const { activeOrders, completedOrders, setActiveOrders, setCompletedOrders } = useOrderStore();
   const availability = store?.availability || AvailabilityStatus.Offline;
+
+  React.useEffect(() => {
+    if (!storeId) return;
+    const unsubActive = FirestoreService.subscribeActiveOrders(storeId, setActiveOrders);
+    const unsubHistory = FirestoreService.subscribeOrderHistory(storeId, setCompletedOrders);
+    return () => {
+      unsubActive();
+      unsubHistory();
+    };
+  }, [storeId, setActiveOrders, setCompletedOrders]);
 
   const handleToggleAvailability = (newStatus: AvailabilityStatus) => {
     setAvailability(newStatus);
@@ -20,6 +33,9 @@ export const DashboardScreen = ({ navigation }: any) => {
       );
     }
   };
+
+  const totalOrders = activeOrders.length + completedOrders.length;
+  const acceptedOrders = activeOrders.filter(o => o.status !== OrderStatus.New).length + completedOrders.filter(o => o.status === OrderStatus.Completed).length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -40,12 +56,12 @@ export const DashboardScreen = ({ navigation }: any) => {
           <Text style={styles.cardTitle}>Today's Summary</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>12</Text>
+              <Text style={styles.statNumber}>{totalOrders}</Text>
               <Text style={styles.statLabel}>Orders</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>98%</Text>
-              <Text style={styles.statLabel}>Acceptance</Text>
+              <Text style={styles.statNumber}>{acceptedOrders}</Text>
+              <Text style={styles.statLabel}>Accepted</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>4.2m</Text>

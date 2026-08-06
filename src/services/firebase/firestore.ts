@@ -59,6 +59,11 @@ export class FirestoreService {
     await updateDoc(docRef, { availability, updatedAt: new Date().toISOString() });
   }
 
+  static async updatePushToken(storeId: string, pushToken: string): Promise<void> {
+    const docRef = doc(db, 'stores', storeId);
+    await updateDoc(docRef, { expoPushToken: pushToken, updatedAt: new Date().toISOString() });
+  }
+
   static subscribeStoreProfile(storeId: string, onUpdate: (store: Store | null) => void) {
     const docRef = doc(db, 'stores', storeId);
     return onSnapshot(docRef, (snap) => {

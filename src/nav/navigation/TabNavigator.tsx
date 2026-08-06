@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import { DashboardScreen } from '../../features/dashboard/screens/DashboardScreen';
@@ -11,13 +12,15 @@ import { colors } from '../../theme/tokens';
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.brand.primary,
         tabBarInactiveTintColor: colors.text.muted,
-        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8 },
+        tabBarStyle: { height: 60 + insets.bottom, paddingBottom: Math.max(8, insets.bottom), paddingTop: 8 },
         tabBarIcon: ({ color }) => {
           let icon = '🏠';
           if (route.name === 'DashboardTab') icon = '📊';

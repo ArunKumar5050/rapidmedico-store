@@ -5,12 +5,7 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
-let Audio: any = null;
-try {
-  Audio = require('expo-av').Audio;
-} catch (e) {
-  console.warn('[OrderAlertService] Could not load expo-av Audio module:', e);
-}
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
 export interface AlertOrderPayload {
   orderId: string;
@@ -34,7 +29,7 @@ if (!isExpoGo) {
 }
 
 class OrderAlertService {
-  private sound: any = null;
+  private sound: AudioPlayer | null = null;
   private isAlerting = false;
   private alertListeners: Set<AlertCallback> = new Set();
 
@@ -116,28 +111,24 @@ class OrderAlertService {
       console.warn('[OrderAlertService] KeepAwake failed:', e);
     }
 
-    // 2. Play Sound (expo-av)
-    if (Audio) {
-      try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-          shouldDuckAndroid: false,
-        });
+    // 2. Play Sound (expo-audio)
+    try {
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        interruptionMode: 'duckOthers',
+      });
 
-        // Load sound (graceful fallback if sound file missing or invalid)
-        try {
-          const { sound } = await Audio.Sound.createAsync(
-            require('../../../assets/sounds/new_order_alert.mp3'),
-            { shouldPlay: true, isLooping: true, volume: 1.0 }
-          );
-          this.sound = sound;
-        } catch (soundErr) {
-          console.warn('[OrderAlertService] Sound file unavailable, using vibration only:', soundErr);
-        }
-      } catch (e) {
-        console.warn('[OrderAlertService] Audio mode setup fallback:', e);
+      try {
+        this.sound = createAudioPlayer(require('../../../assets/sounds/new_order_alert.mp3'));
+        // Loop the player by listening to finish event or relying on auto-loop if supported
+        this.sound.loop = true;
+        this.sound.play();
+      } catch (soundErr) {
+        console.warn('[OrderAlertService] Sound file unavailable, using vibration only:', soundErr);
       }
+    } catch (e) {
+      console.warn('[OrderAlertService] Audio mode setup fallback:', e);
     }
 
     // 3. Vibration & Haptics pattern
@@ -166,8 +157,8 @@ class OrderAlertService {
     // Unload audio
     if (this.sound) {
       try {
-        await this.sound.stopAsync();
-        await this.sound.unloadAsync();
+        this.sound.pause();
+        this.sound.remove(); // Release memory
       } catch (e) {}
       this.sound = null;
     }

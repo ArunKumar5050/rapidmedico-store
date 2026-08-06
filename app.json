@@ -10,11 +10,6 @@
     "updates": {
       "enabled": false
     },
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0F9D6C"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.rapidmedi.store",
@@ -62,7 +57,9 @@
           "locationAlwaysAndWhenInUsePermission": "Rapidmedi needs your location to set your store coordinates.",
           "locationWhenInUsePermission": "Rapidmedi needs your location to set your store coordinates."
         }
-      ]
+      ],
+      "expo-audio",
+      "expo-asset"
     ],
     "extra": {
       "firebaseApiKey": "AIzaSyDoqbjpy3pFiuvMCBhxffJH27bHBNaKTTA",

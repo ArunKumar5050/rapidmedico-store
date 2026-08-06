@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import { Badge } from '../../../components/ui/Badge';
@@ -10,22 +10,13 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { useOrderStore } from '../../../store/useOrderStore';
 
 export const OrdersScreen = ({ navigation }: any) => {
-  const [activeTab, setActiveTab] = useState<OrderStatus>(OrderStatus.New);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>('All');
+  const [loading, setLoading] = useState(false);
   const { storeId } = useAuthStore();
-  const { activeOrders, setActiveOrders } = useOrderStore();
+  const { activeOrders, completedOrders } = useOrderStore();
 
-  useEffect(() => {
-    if (!storeId) return;
-    setLoading(true);
-    const unsubscribe = FirestoreService.subscribeActiveOrders(storeId, (orders) => {
-      setActiveOrders(orders);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [storeId, setActiveOrders]);
-
-  const filteredOrders = activeOrders.filter((o) => o.status === activeTab);
+  const allOrders = [...activeOrders, ...completedOrders];
+  const filteredOrders = activeTab === 'All' ? allOrders : allOrders.filter((o) => o.status === activeTab);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,15 +25,17 @@ export const OrdersScreen = ({ navigation }: any) => {
       </View>
 
       <View style={styles.tabsRow}>
-        {[OrderStatus.New, OrderStatus.Accepted, OrderStatus.Preparing, OrderStatus.Ready, OrderStatus.Completed].map((status) => (
-          <TouchableOpacity
-            key={status}
-            onPress={() => setActiveTab(status)}
-            style={[styles.tab, activeTab === status && styles.activeTab]}
-          >
-            <Text style={[styles.tabText, activeTab === status && styles.activeTabText]}>{status}</Text>
-          </TouchableOpacity>
-        ))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {['All', OrderStatus.New, OrderStatus.Accepted, OrderStatus.Preparing, OrderStatus.Ready, OrderStatus.Completed, OrderStatus.Rejected].map((status) => (
+            <TouchableOpacity
+              key={status}
+              onPress={() => setActiveTab(status)}
+              style={[styles.tab, activeTab === status && styles.activeTab]}
+            >
+              <Text style={[styles.tabText, activeTab === status && styles.activeTabText]}>{status}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {loading ? (
