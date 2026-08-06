@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../theme/tokens';
 import { AvailabilityToggle } from '../../../components/ui/AvailabilityToggle';
 import { Card } from '../../../components/ui/Card';
-import { AvailabilityStatus } from '../../../types/enums';
+import { AvailabilityStatus, OrderStatus } from '../../../types/enums';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { FirestoreService } from '../../../services/firebase/firestore';
 
