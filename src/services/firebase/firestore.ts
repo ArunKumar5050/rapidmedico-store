@@ -121,6 +121,7 @@ export class FirestoreService {
             totalAmount: data.billAmount,
             assignedAt: assignedAtIso,
             respondByAt: respondByAtIso,
+            paymentStatus: data.paymentStatus,
             _storeId: data.storeId // to filter
           } as StoreOrder & { _storeId?: string };
         })

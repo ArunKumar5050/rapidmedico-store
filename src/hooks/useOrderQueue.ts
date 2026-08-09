@@ -18,7 +18,11 @@ export const useOrderQueue = () => {
       // Trigger Alert Modal if a NEW unhandled order is in queue
       const newOrder = orders.find((o) => o.status === OrderStatus.New);
       if (newOrder) {
-        setActiveAlertOrder(newOrder);
+        // Only trigger if we haven't already ignored/acknowledged it locally
+        const state = useOrderStore.getState();
+        if (!state.ignoredAlertOrders.includes(newOrder.id)) {
+          setActiveAlertOrder(newOrder);
+        }
       }
     });
 

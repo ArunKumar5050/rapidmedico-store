@@ -93,6 +93,10 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         Alert.alert('Error', e.message || 'Failed to update order bill.');
       }
     } else if (currentStatus === OrderStatus.Accepted) {
+      if (order.paymentStatus !== 'COMPLETED') {
+        Alert.alert('Payment Pending', 'Cannot start preparing until customer completes the payment.');
+        return;
+      }
       const ok = await updateStatus(orderId, OrderStatus.Preparing);
       if (ok) setCurrentStatus(OrderStatus.Preparing);
     } else if (currentStatus === OrderStatus.Preparing) {
@@ -118,6 +122,12 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
           </View>
           <Badge label={currentStatus} status={currentStatus} />
         </View>
+
+        {currentStatus === OrderStatus.Accepted && order.paymentStatus !== 'COMPLETED' && (
+          <View style={styles.paymentWarning}>
+            <Text style={styles.paymentWarningText}>⌛ Waiting for Customer to Pay...</Text>
+          </View>
+        )}
 
         {/* Customer & Privacy Box */}
         <View style={styles.card}>
@@ -302,7 +312,24 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.primary },
   content: { padding: spacing.lg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  paymentWarning: {
+    backgroundColor: '#FFF8E1',
+    borderColor: '#FFC107',
+    borderWidth: 1,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginBottom: spacing.lg,
+  },
+  paymentWarningText: {
+    ...typography.bodyStrong,
+    color: '#F57F17',
+  },
   orderId: { ...typography.h1, color: colors.text.primary },
   timestamp: { ...typography.caption, color: colors.text.secondary },
   card: { backgroundColor: colors.background.secondary, padding: spacing.lg, borderRadius: 16, marginBottom: spacing.md },

@@ -47,6 +47,7 @@ export interface StoreOrder {
   rejectionReason?: RejectionReason;
   rejectionNote?: string;
   assignedAt: string;
+  paymentStatus?: string;
   createdAt?: string;
   updatedAt?: string;
   totalAmount?: number;

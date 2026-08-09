@@ -15,7 +15,7 @@ const Stack = createNativeStackNavigator();
 export const RootNavigator = () => {
   useAuth();
   const { isAuthenticated, store, isLoading } = useAuthStore();
-  const { activeAlertOrder, setActiveAlertOrder } = useOrderStore();
+  const { activeAlertOrder, setActiveAlertOrder, addIgnoredAlertOrder } = useOrderStore();
 
   return (
     <NavigationContainer>
@@ -34,10 +34,12 @@ export const RootNavigator = () => {
         order={activeAlertOrder}
         onAccept={(orderId) => {
           setActiveAlertOrder(null);
+          addIgnoredAlertOrder(orderId);
           alert(`Order ${orderId} Accepted!`);
         }}
         onReject={(orderId) => {
           setActiveAlertOrder(null);
+          addIgnoredAlertOrder(orderId);
           alert(`Order ${orderId} Rejected.`);
         }}
       />

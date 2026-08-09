@@ -11,6 +11,8 @@ interface OrderState {
   setCompletedOrders: (orders: StoreOrder[]) => void;
   setSelectedOrder: (order: StoreOrder | null) => void;
   setActiveAlertOrder: (order: StoreOrder | null) => void;
+  ignoredAlertOrders: string[];
+  addIgnoredAlertOrder: (orderId: string) => void;
 }
 
 export const useOrderStore = create<OrderState>((set) => ({
@@ -22,4 +24,9 @@ export const useOrderStore = create<OrderState>((set) => ({
   setCompletedOrders: (completedOrders) => set({ completedOrders }),
   setSelectedOrder: (selectedOrder) => set({ selectedOrder }),
   setActiveAlertOrder: (activeAlertOrder) => set({ activeAlertOrder }),
+  ignoredAlertOrders: [],
+  addIgnoredAlertOrder: (orderId) =>
+    set((state) => ({
+      ignoredAlertOrders: [...state.ignoredAlertOrders, orderId],
+    })),
 }));
