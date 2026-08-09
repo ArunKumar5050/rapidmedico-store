@@ -92,10 +92,14 @@ export const FullScreenOrderAlertModal: React.FC<FullScreenOrderAlertModalProps>
               <Text style={styles.detailTitle}>Customer: </Text>
               {order.customerFirstName}
             </Text>
-            <Text style={styles.detailRow}>
-              <Text style={styles.detailTitle}>Items ({order.items.length}): </Text>
-              {order.items.map((i) => `${i.name} (${i.quantity})`).join(', ')}
-            </Text>
+            <Text style={styles.detailTitle}>Requested Medicines ({order.items.length}):</Text>
+            <View style={styles.itemsList}>
+              {order.items.map((i, idx) => (
+                <Text key={idx} style={styles.itemBullet}>
+                  • {i.name}  <Text style={{ fontWeight: '700' }}>x{i.quantity}</Text>
+                </Text>
+              ))}
+            </View>
             {order.prescriptionUrls && order.prescriptionUrls.length > 0 && (
               <Text style={styles.prescriptionBadge}>📄 Prescription Attached</Text>
             )}
@@ -189,7 +193,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   detailTitle: {
+    ...typography.bodyStrong,
+    color: colors.text.primary,
     fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  itemsList: {
+    marginBottom: spacing.sm,
+    paddingLeft: spacing.sm,
+  },
+  itemBullet: {
+    ...typography.body,
+    color: colors.text.primary,
+    marginBottom: 4,
   },
   prescriptionBadge: {
     ...typography.bodyStrong,
