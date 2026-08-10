@@ -24,6 +24,7 @@ export interface Store {
   createdAt: string;
   updatedAt?: string;
   logoUrl?: string;
+  expoPushToken?: string;
 }
 
 export interface StoreOrderItem {

@@ -111,13 +111,22 @@ export class FirestoreService {
           const assignedAtIso = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
           const respondByAtIso = new Date(new Date(assignedAtIso).getTime() + 90000).toISOString();
           
+          let pUrls: string[] = [];
+          if (Array.isArray(data.prescriptionUrls)) pUrls = [...data.prescriptionUrls];
+          else if (typeof data.prescriptionUrls === 'string') pUrls = [data.prescriptionUrls];
+          if (data.prescriptionUrl) pUrls.push(data.prescriptionUrl);
+          if (data.imageUrl) pUrls.push(data.imageUrl);
+          if (Array.isArray(data.imageUrls)) pUrls = [...pUrls, ...data.imageUrls];
+          if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
+          if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
+          
           return {
             id: docSnap.id,
             customerFirstName: data.userName || 'Customer',
             customerLastName: '',
             status: mappedStatus,
             items: orderItems,
-            prescriptionUrls: data.prescriptionUrls || [],
+            prescriptionUrls: pUrls,
             totalAmount: data.billAmount,
             assignedAt: assignedAtIso,
             respondByAt: respondByAtIso,
@@ -157,12 +166,22 @@ export class FirestoreService {
             orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }];
           }
 
+          let pUrls: string[] = [];
+          if (Array.isArray(data.prescriptionUrls)) pUrls = [...data.prescriptionUrls];
+          else if (typeof data.prescriptionUrls === 'string') pUrls = [data.prescriptionUrls];
+          if (data.prescriptionUrl) pUrls.push(data.prescriptionUrl);
+          if (data.imageUrl) pUrls.push(data.imageUrl);
+          if (Array.isArray(data.imageUrls)) pUrls = [...pUrls, ...data.imageUrls];
+          if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
+          if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
+
           return {
             id: docSnap.id,
             customerFirstName: data.userName || 'Customer',
             customerLastName: '',
             status: mappedStatus,
             items: orderItems,
+            prescriptionUrls: pUrls,
             totalAmount: data.billAmount,
             assignedAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
             respondByAt: new Date(Date.now() + 10 * 60000).toISOString() // Fake timeout

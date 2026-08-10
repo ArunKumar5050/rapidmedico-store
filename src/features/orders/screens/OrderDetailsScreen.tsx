@@ -14,6 +14,14 @@ import { useOrderStore } from '../../../store/useOrderStore';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { FirestoreService } from '../../../services/firebase/firestore';
 
+interface EditableItem {
+  tempId: string;
+  name: string;
+  quantity: string;
+  price: string;
+  dosage?: string;
+}
+
 export const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { orderId } = route.params;
   const { activeOrders } = useOrderStore();
@@ -21,7 +29,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   
   const order = activeOrders.find((o) => o.id === orderId);
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order?.status || OrderStatus.New);
-  const [prices, setPrices] = useState<{ [medicineId: string]: string }>({});
+  const [editableItems, setEditableItems] = useState<EditableItem[]>([]);
 
   const [prescriptionModalVisible, setPrescriptionModalVisible] = useState(false);
   const [rejectSheetVisible, setRejectSheetVisible] = useState(false);
@@ -36,6 +44,26 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
   }, [order?.status]);
 
+  useEffect(() => {
+    // Only initialize once, to prevent overwriting user edits
+    if (order && editableItems.length === 0) {
+      let initItems = order.items.map((it, idx) => ({
+        tempId: it.medicineId || `med-${Date.now()}-${idx}`,
+        name: it.name && it.name !== 'Unknown Medicine' ? it.name : '',
+        quantity: it.quantity ? it.quantity.toString() : '1',
+        price: it.price ? it.price.toString() : '',
+        dosage: it.dosage,
+      }));
+
+      // If it was just "Unknown Medicine", clear it so they can type
+      if (initItems.length === 1 && initItems[0].name === '' && !initItems[0].price) {
+        initItems = [{ ...initItems[0], quantity: '1' }];
+      }
+
+      setEditableItems(initItems);
+    }
+  }, [order]);
+
   if (!order) {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -44,35 +72,51 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     );
   }
 
-  const handlePriceChange = (medicineId: string, value: string) => {
-    setPrices(prev => ({ ...prev, [medicineId]: value }));
+  const handleItemChange = (tempId: string, field: keyof EditableItem, value: string) => {
+    setEditableItems(prev => prev.map(item => item.tempId === tempId ? { ...item, [field]: value } : item));
+  };
+
+  const handleRemoveItem = (tempId: string) => {
+    setEditableItems(prev => prev.filter(item => item.tempId !== tempId));
+  };
+
+  const handleAddItem = () => {
+    setEditableItems(prev => [
+      ...prev,
+      { tempId: `new-${Date.now()}`, name: '', quantity: '1', price: '' }
+    ]);
   };
 
   const calculateTotal = () => {
     let total = 0;
-    order.items.forEach(item => {
-      const price = parseFloat(prices[item.medicineId] || '0');
-      if (!isNaN(price) && item.quantity) {
-        total += price * item.quantity;
+    editableItems.forEach(item => {
+      const p = parseFloat(item.price);
+      const q = parseInt(item.quantity, 10);
+      if (!isNaN(p) && !isNaN(q)) {
+        total += p * q;
       }
     });
     return total + 200; // Adding 200 delivery charge
   };
 
   const handlePrimaryAction = async () => {
-    if (currentStatus === OrderStatus.New) {
-      // Validate prices
+    if (needsPricing) {
       let isValid = true;
-      const updatedItems = order.items.map(item => {
-        const price = parseFloat(prices[item.medicineId] || '0');
-        if (isNaN(price) || price <= 0) {
+      const updatedItems = editableItems.map(item => {
+        const p = parseFloat(item.price);
+        const q = parseInt(item.quantity, 10);
+        if (!item.name.trim() || isNaN(p) || p <= 0 || isNaN(q) || q <= 0) {
           isValid = false;
         }
-        return { ...item, price };
+        const updatedItem: any = { medicineId: item.tempId, name: item.name, quantity: q, price: p };
+        if (item.dosage) {
+          updatedItem.dosage = item.dosage;
+        }
+        return updatedItem;
       });
 
-      if (!isValid) {
-        Alert.alert('Missing Prices', 'Please enter a valid price for all medicines in the order.');
+      if (!isValid || updatedItems.length === 0) {
+        Alert.alert('Missing Info', 'Please ensure all medicines have a valid name, quantity, and price.');
         return;
       }
 
@@ -93,8 +137,9 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         Alert.alert('Error', e.message || 'Failed to update order bill.');
       }
     } else if (currentStatus === OrderStatus.Accepted) {
-      if (order.paymentStatus !== 'COMPLETED') {
-        Alert.alert('Payment Pending', 'Cannot start preparing until customer completes the payment.');
+      const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
+      if (!isPaid) {
+        Alert.alert('Payment Pending', 'Cannot start preparing until customer completes the payment or selects Cash on Delivery.');
         return;
       }
       const ok = await updateStatus(orderId, OrderStatus.Preparing);
@@ -111,6 +156,10 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
+  const needsPricing = currentStatus === OrderStatus.New || 
+                       (currentStatus === OrderStatus.Accepted && (!order.totalAmount || order.totalAmount === 0));
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -123,7 +172,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
           <Badge label={currentStatus} status={currentStatus} />
         </View>
 
-        {currentStatus === OrderStatus.Accepted && order.paymentStatus !== 'COMPLETED' && (
+        {currentStatus === OrderStatus.Accepted && !isPaid && (
           <View style={styles.paymentWarning}>
             <Text style={styles.paymentWarningText}>⌛ Waiting for Customer to Pay...</Text>
           </View>
@@ -149,8 +198,8 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
           >
             <Text style={styles.prescriptionIcon}>📄</Text>
             <View style={{ flex: 1 }}>
-              <Text style={styles.prescriptionTitle}>Doctor Prescription Attached</Text>
-              <Text style={styles.prescriptionSub}>Tap to view full screen scan</Text>
+              <Text style={styles.prescriptionTitle}>Prescription / Image Attached</Text>
+              <Text style={styles.prescriptionSub}>Tap to view full screen</Text>
             </View>
             <Text style={styles.viewBadge}>VIEW →</Text>
           </TouchableOpacity>
@@ -158,34 +207,62 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
         {/* Medicines List & Pricing Form */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Medicines & Billing ({order.items.length})</Text>
-          {order.items.map((item, idx) => (
-            <View key={idx} style={styles.itemRow}>
-              <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemQty}>Quantity: {item.quantity}</Text>
-                {item.dosage && <Text style={styles.itemQty}>Dosage: {item.dosage}</Text>}
-              </View>
-              {currentStatus === OrderStatus.New ? (
-                <View style={styles.priceInputContainer}>
-                  <Text style={styles.currencySymbol}>₹</Text>
-                  <TextInput
-                    style={styles.priceInput}
-                    placeholder="0.00"
-                    keyboardType="numeric"
-                    value={prices[item.medicineId] || ''}
-                    onChangeText={(val) => handlePriceChange(item.medicineId, val)}
-                  />
+          <Text style={styles.cardTitle}>Medicines & Billing</Text>
+          
+          {needsPricing ? (
+            <>
+              {editableItems.map((item, idx) => (
+                <View key={item.tempId} style={styles.editableItemRow}>
+                  <View style={styles.itemInputsContainer}>
+                    <TextInput
+                      style={[styles.input, { flex: 2.5, marginRight: spacing.sm }]}
+                      placeholder="Medicine Name"
+                      value={item.name}
+                      onChangeText={(val) => handleItemChange(item.tempId, 'name', val)}
+                    />
+                    <TextInput
+                      style={[styles.input, { flex: 1, marginRight: spacing.sm }]}
+                      placeholder="Qty"
+                      keyboardType="numeric"
+                      value={item.quantity}
+                      onChangeText={(val) => handleItemChange(item.tempId, 'quantity', val)}
+                    />
+                    <View style={[styles.priceInputContainer, { flex: 1.5 }]}>
+                      <Text style={styles.currencySymbol}>₹</Text>
+                      <TextInput
+                        style={styles.priceInput}
+                        placeholder="Price"
+                        keyboardType="numeric"
+                        value={item.price}
+                        onChangeText={(val) => handleItemChange(item.tempId, 'price', val)}
+                      />
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={() => handleRemoveItem(item.tempId)} style={styles.removeBtn}>
+                    <Text style={styles.removeBtnText}>✕</Text>
+                  </TouchableOpacity>
                 </View>
-              ) : (
+              ))}
+              <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem}>
+                <Text style={styles.addItemText}>+ ADD MEDICINE</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            order.items.map((item, idx) => (
+              <View key={idx} style={styles.itemRow}>
+                <View style={{ flex: 1, paddingRight: spacing.sm }}>
+                  <Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.itemQty}>Quantity: {item.quantity}</Text>
+                  {item.dosage && <Text style={styles.itemQty}>Dosage: {item.dosage}</Text>}
+                </View>
                 <Text style={styles.itemPrice}>
                   ₹{(item.price || 0).toFixed(2)}
                 </Text>
-              )}
-            </View>
-          ))}
+              </View>
+            ))
+          )}
           
-          <View style={[styles.totalRow, { borderTopWidth: 0, marginTop: 0, paddingTop: 0 }]}>
+          <View style={[styles.totalRow, { borderTopWidth: 0, marginTop: spacing.md, paddingTop: spacing.sm, borderTopColor: colors.border.default, borderTopWidth: 1 }]}>
             <Text style={[styles.totalLabel, { fontSize: 14, color: '#666' }]}>Delivery Charge:</Text>
             <Text style={[styles.totalAmount, { fontSize: 14, color: '#666' }]}>
                ₹200.00
@@ -195,7 +272,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Grand Total:</Text>
             <Text style={styles.totalAmount}>
-               ₹{currentStatus === OrderStatus.New ? calculateTotal().toFixed(2) : (order.totalAmount || 0).toFixed(2)}
+               ₹{needsPricing ? calculateTotal().toFixed(2) : (order.totalAmount || 0).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -229,10 +306,10 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
       {/* Action Buttons */}
       <View style={styles.footer}>
-        {currentStatus === OrderStatus.New && (
+        {needsPricing && (
           <>
             <Button
-              title="ACCEPT ORDER & GENERATE BILL"
+              title="GENERATE BILL & REQUEST PAYMENT"
               variant="accept"
               size="large"
               loading={acceptLoading}
@@ -249,7 +326,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
           </>
         )}
 
-        {currentStatus === OrderStatus.Accepted && (
+        {currentStatus === OrderStatus.Accepted && !needsPricing && (
           <Button
             title="START PREPARING MEDICINES"
             variant="primary"
@@ -326,10 +403,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: spacing.lg,
   },
-  paymentWarningText: {
-    ...typography.bodyStrong,
-    color: '#F57F17',
-  },
+  paymentWarningText: { ...typography.bodyStrong, color: '#F57F17' },
   orderId: { ...typography.h1, color: colors.text.primary },
   timestamp: { ...typography.caption, color: colors.text.secondary },
   card: { backgroundColor: colors.background.secondary, padding: spacing.lg, borderRadius: 16, marginBottom: spacing.md },
@@ -354,9 +428,35 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.default },
   itemName: { ...typography.bodyStrong, color: colors.text.primary, flexWrap: 'wrap' },
   itemQty: { ...typography.caption, color: colors.text.secondary },
-  priceInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border.default, borderRadius: 8, paddingHorizontal: spacing.sm, backgroundColor: colors.background.primary, width: 80 },
+  
+  editableItemRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
+  itemInputsContainer: { flexDirection: 'row', flex: 1 },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.background.primary,
+    ...typography.body,
+    paddingVertical: 8,
+  },
+  priceInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border.default, borderRadius: 8, paddingHorizontal: spacing.sm, backgroundColor: colors.background.primary },
   currencySymbol: { ...typography.body, color: colors.text.secondary, marginRight: 2 },
-  priceInput: { flex: 1, ...typography.body, paddingVertical: spacing.xs },
+  priceInput: { flex: 1, ...typography.body, paddingVertical: 8 },
+  removeBtn: { padding: spacing.sm, marginLeft: spacing.xs, backgroundColor: '#FFF0F0', borderRadius: 8 },
+  removeBtnText: { color: colors.alert.urgent, fontWeight: '700' },
+  addItemBtn: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: colors.brand.primary,
+    borderRadius: 8,
+    marginTop: spacing.sm,
+    backgroundColor: colors.brand.primaryLight,
+  },
+  addItemText: { ...typography.bodyStrong, color: colors.brand.primary },
+  
   itemPrice: { ...typography.bodyStrong, color: colors.text.primary },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: spacing.md, marginTop: spacing.sm },
   totalLabel: { ...typography.h2, color: colors.text.primary },

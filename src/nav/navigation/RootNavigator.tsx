@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthNavigator } from './AuthNavigator';
 import { KycPendingNavigator } from './KycPendingNavigator';
@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { KycStatus } from '../../types/enums';
 import { FullScreenOrderAlertModal } from '../../components/ui/FullScreenOrderAlertModal';
 import { useOrderStore } from '../../store/useOrderStore';
+import { FirestoreService } from '../../services/firebase/firestore';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,9 +17,22 @@ export const RootNavigator = () => {
   useAuth();
   const { isAuthenticated, store, isLoading } = useAuthStore();
   const { activeAlertOrder, setActiveAlertOrder, addIgnoredAlertOrder } = useOrderStore();
+  const navigationRef = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (isAuthenticated && store?.storeId) {
+      import('../../services/notifications').then(({ registerForPushNotificationsAsync }) => {
+        registerForPushNotificationsAsync().then(token => {
+          if (token && store.expoPushToken !== token) {
+            FirestoreService.updatePushToken(store.storeId, token).catch(e => console.log('Push token update error:', e));
+          }
+        });
+      });
+    }
+  }, [isAuthenticated, store?.storeId]);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />
@@ -32,15 +46,20 @@ export const RootNavigator = () => {
       <FullScreenOrderAlertModal
         visible={!!activeAlertOrder}
         order={activeAlertOrder}
-        onAccept={(orderId) => {
+        onAccept={async (orderId) => {
+          if (store?.storeId) {
+            await FirestoreService.acceptOrder(store.storeId, orderId);
+          }
           setActiveAlertOrder(null);
           addIgnoredAlertOrder(orderId);
-          alert(`Order ${orderId} Accepted!`);
+          if (navigationRef.isReady()) {
+            // @ts-ignore
+            navigationRef.navigate('Main', { screen: 'OrderDetails', params: { orderId } });
+          }
         }}
         onReject={(orderId) => {
           setActiveAlertOrder(null);
           addIgnoredAlertOrder(orderId);
-          alert(`Order ${orderId} Rejected.`);
         }}
       />
     </NavigationContainer>
