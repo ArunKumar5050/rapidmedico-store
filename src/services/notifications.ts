@@ -27,7 +27,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
       name: 'Order Alerts',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 500, 500, 500],
-      sound: 'new_order_alert.wav',
+      sound: 'new_order_alert.mp3',
       lightColor: '#0F9D6C',
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       bypassDnd: true,
