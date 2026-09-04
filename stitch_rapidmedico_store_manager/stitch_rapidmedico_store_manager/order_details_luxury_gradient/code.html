@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Details - RapidMedico</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "inverse-primary": "#65dca6",
+                      "primary": "#006a47",
+                      "surface-container-low": "#ecf6ef",
+                      "secondary-fixed-dim": "#a6d0ba",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed": "#002114",
+                      "on-primary-fixed-variant": "#005236",
+                      "sage-bottom": "#E2E8E4",
+                      "inverse-surface": "#2a322e",
+                      "secondary-fixed": "#c2ecd5",
+                      "error": "#ba1a1a",
+                      "secondary": "#406654",
+                      "tertiary": "#825100",
+                      "surface-container-high": "#e1eae3",
+                      "on-secondary-fixed-variant": "#284e3d",
+                      "on-background": "#151d19",
+                      "secondary-container": "#bfe9d2",
+                      "on-error-container": "#93000a",
+                      "glass-border": "rgba(255, 255, 255, 0.6)",
+                      "emerald-deep": "#059669",
+                      "on-secondary-container": "#446a58",
+                      "primary-fixed-dim": "#65dca6",
+                      "tertiary-fixed": "#ffddb8",
+                      "background": "#f2fcf4",
+                      "outline": "#6d7a71",
+                      "emerald-lush": "#10B981",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#00855a",
+                      "on-error": "#ffffff",
+                      "surface": "#f2fcf4",
+                      "surface-container-highest": "#dbe5de",
+                      "error-container": "#ffdad6",
+                      "tertiary-container": "#a36700",
+                      "on-tertiary-container": "#fffbff",
+                      "on-surface-variant": "#3d4a42",
+                      "surface-tint": "#006c49",
+                      "surface-bright": "#f2fcf4",
+                      "on-tertiary-fixed": "#2a1700",
+                      "primary-fixed": "#82f9c0",
+                      "on-primary-container": "#f5fff6",
+                      "on-surface": "#151d19",
+                      "surface-container": "#e7f0e9",
+                      "sage-top": "#F4F7F5",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#bccac0",
+                      "on-primary-fixed": "#002113",
+                      "on-secondary": "#ffffff",
+                      "inverse-on-surface": "#eaf3ec",
+                      "surface-variant": "#dbe5de",
+                      "surface-dim": "#d3dcd5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "margin-desktop": "64px",
+                      "gutter": "24px",
+                      "container-max": "1280px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "title-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.03em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background: linear-gradient(180deg, #F4F7F5 0%, #E2E8E4 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3));
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(5, 150, 105, 0.05);
+        }
+        .emerald-gradient {
+            background: linear-gradient(135deg, #10B981, #059669);
+        }
+        .amber-gradient {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+    </style>
+</head>
+<body class="text-on-background font-body-md pb-32">
+<!-- Top Navigation (Transactional/Focus - suppressed global nav, just simple header) -->
+<header class="bg-sage-top/80 dark:bg-inverse-surface/80 backdrop-blur-xl font-title-lg text-title-lg border-b border-glass-border shadow-[0_4px_20px_-2px_rgba(5,150,105,0.15)] flex justify-between items-center px-margin-mobile py-4 w-full sticky z-50 top-0 text-primary dark:text-primary-fixed-dim">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined cursor-pointer hover:bg-white/20 transition-colors active:scale-95 duration-200 p-2 rounded-full" data-icon="arrow_back">arrow_back</span>
+<span class="font-display-lg text-display-lg tracking-tighter text-emerald-deep dark:text-primary-fixed">RapidMedico</span>
+</div>
+<div class="flex items-center">
+<span class="font-label-sm text-label-sm bg-tertiary-fixed-dim/20 text-tertiary-fixed-dim px-3 py-1 rounded-full border border-tertiary-fixed-dim/30">Pending Pricing</span>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Details -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Page Title -->
+<div class="flex justify-between items-end mb-4">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary text-glow">Order #A1B2C3D4</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Received 10 mins ago</p>
+</div>
+</div>
+<!-- Payment Warning Banner -->
+<div class="amber-gradient rounded-xl p-4 flex items-start gap-4 shadow-lg text-white">
+<span class="material-symbols-outlined mt-0.5" data-icon="warning">warning</span>
+<div>
+<h3 class="font-title-lg text-title-lg mb-1">Action Required: Price Prescription</h3>
+<p class="font-body-md text-body-md opacity-90">This order contains prescription items that need pricing before the customer can proceed to payment.</p>
+</div>
+</div>
+<!-- Customer Info -->
+<section class="glass-card rounded-xl p-6">
+<h2 class="font-title-lg text-title-lg text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+                    Customer Information
+                </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Name</p>
+<p class="font-body-lg text-body-lg text-on-surface font-medium">Priya Sharma</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Contact</p>
+<p class="font-body-lg text-body-lg text-on-surface">+91 98765 43210</p>
+</div>
+<div class="md:col-span-2 mt-2">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Delivery Address</p>
+<p class="font-body-lg text-body-lg text-on-surface bg-white/40 p-3 rounded-lg border border-glass-border">
+                            Apt 4B, Emerald Heights, Sector 45, Gurugram, Haryana 122003
+                        </p>
+</div>
+</div>
+</section>
+<!-- Prescription Images -->
+<section class="glass-card rounded-xl p-6">
+<h2 class="font-title-lg text-title-lg text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="prescriptions">prescriptions</span>
+                    Prescription Uploads
+                </h2>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<div class="aspect-[3/4] rounded-lg overflow-hidden border border-glass-border shadow-sm relative group cursor-pointer">
+<img class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" data-alt="A high-quality, close-up photograph of a handwritten medical prescription resting on a pristine white surface. The lighting is soft and bright, emphasizing a clean, clinical aesthetic. The prescription is sharply in focus, showing blue ink on white paper, conveying authenticity and health-tech professionalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfaayX5KNmv_GTqBW_eTYPwcEsMDa7R1UUCxWJ1I-j-k6ekPidCWGX8y7_hD1JahIfk9Cr3iVGjTtjbxXudgru9FjUTWyKO-Muy07UGlY7Gl9LeaMjwTxL_gZy1apFiNRSd6N7M0Um6ocaFEN86ubpuU38HHe1SlGRFgLTPGzwA_ZfEociT-zpJKZUtct50BeZXSmkS1ootkONHsEIdGl9CGP4tDJTMuDn4PdQ8afyDPayeCjXqJtnOw"/>
+<div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="zoom_in">zoom_in</span>
+</div>
+</div>
+<div class="aspect-[3/4] rounded-lg overflow-hidden border border-glass-border shadow-sm bg-surface-container flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-3xl mb-2" data-icon="add_photo_alternate">add_photo_alternate</span>
+<span class="font-label-sm text-label-sm">Request More</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Actions -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Bill Editor -->
+<section class="glass-card rounded-xl p-6 sticky top-24">
+<h2 class="font-title-lg text-title-lg text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+                    Bill Editor
+                </h2>
+<div class="space-y-4 mb-6">
+<!-- Item 1 -->
+<div class="bg-white/50 p-3 rounded-lg border border-glass-border">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Amoxicillin 500mg</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Qty: 2 strips (20 tabs)</p>
+</div>
+<span class="material-symbols-outlined text-error cursor-pointer hover:text-error-container" data-icon="delete">delete</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-on-surface-variant">₹</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-1 font-body-md text-body-md focus:ring-2 focus:ring-emerald-lush focus:border-transparent outline-none transition-all" placeholder="0.00" type="number" value="120"/>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-white/50 p-3 rounded-lg border border-glass-border">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Paracetamol 650mg</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Qty: 1 strip (15 tabs)</p>
+</div>
+<span class="material-symbols-outlined text-error cursor-pointer hover:text-error-container" data-icon="delete">delete</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-on-surface-variant">₹</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-1 font-body-md text-body-md focus:ring-2 focus:ring-emerald-lush focus:border-transparent outline-none transition-all" placeholder="0.00" type="number" value="45"/>
+</div>
+</div>
+<button class="w-full py-2 rounded-lg border-2 border-dashed border-emerald-lush/50 text-emerald-deep font-label-sm text-label-sm flex items-center justify-center gap-2 hover:bg-emerald-lush/10 transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                        Add Item
+                    </button>
+</div>
+<div class="border-t border-glass-border pt-4 mb-6">
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Subtotal</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">₹165.00</span>
+</div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Delivery Fee</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">₹40.00</span>
+</div>
+<div class="flex justify-between items-center mt-4 pt-2 border-t border-glass-border">
+<span class="font-title-lg text-title-lg text-primary">Total</span>
+<span class="font-title-lg text-title-lg text-emerald-deep font-bold">₹205.00</span>
+</div>
+</div>
+<!-- OTP Verification (Contextual) -->
+<div class="bg-surface-container-high p-4 rounded-lg border border-outline-variant/30 mb-6">
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-2">Delivery Partner OTP (Required for handover)</p>
+<div class="flex gap-2">
+<input class="w-12 h-12 text-center text-title-lg font-title-lg rounded-md border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-emerald-lush outline-none" maxlength="1" placeholder="-" type="text"/>
+<input class="w-12 h-12 text-center text-title-lg font-title-lg rounded-md border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-emerald-lush outline-none" maxlength="1" placeholder="-" type="text"/>
+<input class="w-12 h-12 text-center text-title-lg font-title-lg rounded-md border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-emerald-lush outline-none" maxlength="1" placeholder="-" type="text"/>
+<input class="w-12 h-12 text-center text-title-lg font-title-lg rounded-md border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-emerald-lush outline-none" maxlength="1" placeholder="-" type="text"/>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Fixed Bottom Actions -->
+<div class="fixed bottom-0 left-0 w-full bg-white/80 dark:bg-inverse-surface/80 backdrop-blur-2xl border-t border-glass-border p-4 shadow-[0_-10px_30px_-5px_rgba(5,150,105,0.1)] z-50">
+<div class="max-w-container-max mx-auto flex gap-4 justify-end">
+<button class="px-6 py-3 rounded-xl border border-error text-error font-label-sm text-label-sm hover:bg-error/10 transition-colors bg-white/50">
+                Reject Order
+            </button>
+<button class="px-8 py-3 rounded-xl emerald-gradient text-white font-label-sm text-label-sm shadow-[0_4px_12px_rgba(5,150,105,0.3)] hover:shadow-[0_6px_16px_rgba(5,150,105,0.4)] transform hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                Send Payment Link to Customer
+                <span class="material-symbols-outlined text-sm" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</body></html>

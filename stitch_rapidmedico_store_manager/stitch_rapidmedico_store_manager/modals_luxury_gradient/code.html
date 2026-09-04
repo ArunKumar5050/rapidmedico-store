@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Modals &amp; Overlays - RapidMedico</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#a6d0ba",
+                        "secondary": "#406654",
+                        "background": "#f2fcf4",
+                        "on-tertiary-container": "#fffbff",
+                        "surface": "#f2fcf4",
+                        "inverse-surface": "#2a322e",
+                        "surface-dim": "#d3dcd5",
+                        "on-surface-variant": "#3d4a42",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#f5fff6",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#bccac0",
+                        "primary-fixed": "#82f9c0",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "primary-container": "#00855a",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary-fixed": "#002113",
+                        "inverse-primary": "#65dca6",
+                        "surface-container-highest": "#dbe5de",
+                        "surface-variant": "#dbe5de",
+                        "emerald-lush": "#10B981",
+                        "on-background": "#151d19",
+                        "secondary-fixed": "#c2ecd5",
+                        "primary-fixed-dim": "#65dca6",
+                        "tertiary-container": "#a36700",
+                        "on-primary-fixed-variant": "#005236",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#284e3d",
+                        "surface-container-high": "#e1eae3",
+                        "on-secondary-fixed": "#002114",
+                        "primary": "#006a47",
+                        "error": "#ba1a1a",
+                        "glass-border": "rgba(255, 255, 255, 0.6)",
+                        "inverse-on-surface": "#eaf3ec",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#ecf6ef",
+                        "on-secondary-container": "#446a58",
+                        "on-tertiary-fixed": "#2a1700",
+                        "sage-bottom": "#E2E8E4",
+                        "surface-tint": "#006c49",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f2fcf4",
+                        "emerald-deep": "#059669",
+                        "sage-top": "#F4F7F5",
+                        "on-secondary": "#ffffff",
+                        "outline": "#6d7a71",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container": "#e7f0e9",
+                        "secondary-container": "#bfe9d2",
+                        "tertiary": "#825100",
+                        "on-surface": "#151d19"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "title-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f2fcf4;
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3));
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .dimmed-overlay {
+            background: linear-gradient(180deg, rgba(244, 247, 245, 0.6) 0%, rgba(226, 232, 228, 0.8) 100%);
+            backdrop-filter: blur(8px);
+        }
+        
+        /* Modal Animations */
+        .bottom-sheet {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bottom-sheet.open {
+            transform: translateY(0);
+        }
+        
+        .modal-overlay {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="text-on-surface antialiased min-h-screen flex flex-col relative overflow-hidden">
+<!-- Top Navigation (Shell structure, inactive for this demo screen context) -->
+<header class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 w-full sticky z-40 top-0 bg-sage-top/80 backdrop-blur-xl border-b border-glass-border shadow-[0_4px_20px_-2px_rgba(5,150,105,0.15)]">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">local_pharmacy</span>
+<span class="font-display-lg text-display-lg tracking-tighter text-emerald-deep">RapidMedico</span>
+</div>
+<div class="hidden md:flex items-center gap-6 font-title-lg text-title-lg text-on-surface-variant">
+<span class="hover:bg-white/20 transition-colors px-3 py-2 rounded-lg cursor-pointer">Dashboard</span>
+<span class="text-emerald-lush font-bold px-3 py-2 rounded-lg cursor-pointer">Orders</span>
+<span class="hover:bg-white/20 transition-colors px-3 py-2 rounded-lg cursor-pointer">Inventory</span>
+</div>
+<div>
+<span class="font-title-lg text-title-lg text-primary">Online</span>
+</div>
+</header>
+<!-- Main Canvas (Background Content simulating an active screen) -->
+<main class="flex-grow p-margin-mobile md:p-margin-desktop z-0 relative">
+<div class="max-w-container-max mx-auto h-full flex flex-col items-center justify-center min-h-[60vh]">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-emerald-deep mb-8 text-center">Modal Demonstration</h1>
+<div class="flex flex-col md:flex-row gap-6">
+<button class="px-8 py-4 rounded-xl bg-gradient-to-br from-emerald-lush to-emerald-deep text-on-primary font-title-lg text-title-lg shadow-[0_4px_12px_rgba(5,150,105,0.3)] hover:opacity-90 active:scale-95 transition-all" onclick="document.getElementById('rejectSheetOverlay').classList.add('open'); document.getElementById('rejectSheet').classList.add('open')">
+                    Show Reject Order
+                </button>
+<button class="px-8 py-4 rounded-xl glass-card border-emerald-lush/30 text-emerald-deep font-title-lg text-title-lg hover:bg-white/40 active:scale-95 transition-all" onclick="document.getElementById('prescriptionModal').classList.add('open')">
+                    View Prescription
+                </button>
+</div>
+<p class="mt-12 text-outline-variant font-body-md text-body-md text-center max-w-lg">
+                This screen demonstrates the luxurious, glassmorphic overlay and bottom sheet interactions. The background will dim, maintaining the immersive gradient feel while focusing attention on the action layers.
+            </p>
+</div>
+</main>
+<!-- Reject Order Bottom Sheet Overlay -->
+<div class="fixed inset-0 z-50 modal-overlay dimmed-overlay flex flex-col justify-end" id="rejectSheetOverlay" onclick="closeRejectSheet(event)">
+<!-- Bottom Sheet Content -->
+<div class="bottom-sheet w-full max-w-2xl mx-auto bg-surface/90 backdrop-blur-2xl rounded-t-[32px] border-t border-x border-glass-border shadow-[0_-20px_40px_-10px_rgba(5,150,105,0.15)] p-margin-mobile md:p-gutter pb-safe" id="rejectSheet" onclick="event.stopPropagation()">
+<!-- Drag Handle -->
+<div class="w-16 h-1.5 bg-outline-variant/50 rounded-full mx-auto mb-6"></div>
+<div class="flex justify-between items-center mb-8">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-error">Reject Order #8924</h2>
+<button class="text-on-surface-variant hover:bg-black/5 p-2 rounded-full transition-colors" onclick="closeRejectSheet(event)">
+<span class="material-symbols-outlined text-2xl">close</span>
+</button>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-6">Please select the reason for rejecting this order. The patient will be notified immediately.</p>
+<div class="space-y-4 mb-8">
+<!-- Radio Option 1 -->
+<label class="glass-card flex items-center p-4 rounded-xl cursor-pointer hover:bg-white/50 transition-colors border-error-container/50">
+<input checked="" class="form-radio text-error focus:ring-error w-5 h-5 border-outline-variant" name="reject_reason" type="radio"/>
+<span class="ml-4 font-title-lg text-title-lg text-on-surface">Medicine Out of Stock</span>
+</label>
+<!-- Radio Option 2 -->
+<label class="glass-card flex items-center p-4 rounded-xl cursor-pointer hover:bg-white/50 transition-colors">
+<input class="form-radio text-error focus:ring-error w-5 h-5 border-outline-variant" name="reject_reason" type="radio"/>
+<span class="ml-4 font-title-lg text-title-lg text-on-surface">Invalid Prescription</span>
+</label>
+<!-- Radio Option 3 -->
+<label class="glass-card flex items-center p-4 rounded-xl cursor-pointer hover:bg-white/50 transition-colors">
+<input class="form-radio text-error focus:ring-error w-5 h-5 border-outline-variant" name="reject_reason" type="radio"/>
+<span class="ml-4 font-title-lg text-title-lg text-on-surface">Delivery Address Unreachable</span>
+</label>
+</div>
+<div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-glass-border">
+<button class="flex-1 px-6 py-4 rounded-xl glass-card font-title-lg text-title-lg text-on-surface-variant hover:bg-white/40 active:scale-95 transition-all text-center" onclick="closeRejectSheet(event)">
+                    Cancel
+                </button>
+<button class="flex-1 px-6 py-4 rounded-xl bg-error text-on-error font-title-lg text-title-lg shadow-[0_4px_12px_rgba(186,26,26,0.3)] hover:bg-error/90 active:scale-95 transition-all text-center flex justify-center items-center gap-2" onclick="closeRejectSheet(event)">
+<span class="material-symbols-outlined">block</span> Confirm Rejection
+                </button>
+</div>
+</div>
+</div>
+<!-- Prescription Viewer Modal Overlay -->
+<div class="fixed inset-0 z-50 modal-overlay dimmed-overlay flex items-center justify-center p-margin-mobile" id="prescriptionModal" onclick="closePrescriptionModal(event)">
+<!-- Modal Content -->
+<div class="modal-content w-full max-w-4xl max-h-[90vh] glass-card rounded-2xl shadow-[0_20px_60px_-15px_rgba(5,150,105,0.2)] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+<!-- Modal Header -->
+<div class="flex justify-between items-center p-6 border-b border-glass-border bg-white/40">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-emerald-deep text-3xl" style="font-variation-settings: 'FILL' 1;">description</span>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-emerald-deep">Prescription Details</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-emerald-deep hover:bg-emerald-lush/10 p-2 rounded-full transition-colors flex items-center gap-2 font-title-lg text-title-lg">
+<span class="material-symbols-outlined">download</span> <span class="hidden sm:inline">Download</span>
+</button>
+<button class="text-on-surface-variant hover:bg-black/5 p-2 rounded-full transition-colors" onclick="closePrescriptionModal(event)">
+<span class="material-symbols-outlined text-2xl">close</span>
+</button>
+</div>
+</div>
+<!-- Modal Body -->
+<div class="flex-grow overflow-y-auto p-6 flex flex-col md:flex-row gap-8 bg-surface-low/30">
+<!-- Document Viewer Area -->
+<div class="flex-grow bg-white rounded-xl shadow-inner border border-surface-variant min-h-[400px] relative overflow-hidden flex items-center justify-center p-4">
+<!-- Placeholder for prescription image -->
+<img class="w-full h-full object-contain opacity-80 mix-blend-multiply" data-alt="A highly detailed, professional medical prescription document resting on a clean, bright white surface. The document features clear, dark typography with a hospital logo at the top. The lighting is crisp and even, creating a clinical yet premium atmosphere consistent with a modern healthcare app interface. Subtle shadows give the paper depth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZqgSKZ1wI_vCagUGCJrwfVfCgPhetFE8y1sS8qt1-krVTcMPwfb-ej2XSqf39SfD2XrRGW3lxHHxa1z-DOo3BOgAET6xeZlFWma1Yrfv1G1nNARzw860eTt8rG7tviHKdi7zOXzEBw38pfT94lrgB6icOuFU5h0_tLpsEwr9YGNbaURCsAps7IBfjn9j6Zjml8ip2xnKpeJWO81LlxtH06QlVvHG7mBXvIC6lj3k-8g68o9Jwmc-e2g"/>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="glass-card px-4 py-2 rounded-full text-emerald-deep font-title-lg text-title-lg flex items-center gap-2 shadow-lg">
+<span class="material-symbols-outlined">zoom_in</span> Tap to zoom
+                         </div>
+</div>
+</div>
+<!-- Patient & Meta Info Sidebar -->
+<div class="w-full md:w-80 flex flex-col gap-6">
+<div class="glass-card p-5 rounded-xl">
+<h3 class="font-title-lg text-title-lg text-secondary mb-4 flex items-center gap-2 border-b border-glass-border pb-2">
+<span class="material-symbols-outlined">person</span> Patient Info
+                        </h3>
+<div class="space-y-3 font-body-md text-body-md">
+<div class="flex justify-between">
+<span class="text-outline">Name:</span>
+<span class="text-on-surface font-semibold">Eleanor Vance</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Age:</span>
+<span class="text-on-surface font-semibold">34</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Date:</span>
+<span class="text-on-surface font-semibold">Oct 24, 2023</span>
+</div>
+</div>
+</div>
+<div class="glass-card p-5 rounded-xl">
+<h3 class="font-title-lg text-title-lg text-secondary mb-4 flex items-center gap-2 border-b border-glass-border pb-2">
+<span class="material-symbols-outlined">stethoscope</span> Physician Info
+                        </h3>
+<div class="space-y-3 font-body-md text-body-md">
+<div class="flex justify-between">
+<span class="text-outline">Doctor:</span>
+<span class="text-on-surface font-semibold">Dr. Aris Thorne</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Clinic:</span>
+<span class="text-on-surface font-semibold">Lumina Wellness</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">License:</span>
+<span class="text-on-surface font-semibold">MED-88392</span>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-4 flex gap-3">
+<button class="flex-1 px-4 py-3 rounded-xl glass-card font-title-lg text-title-lg text-emerald-deep hover:bg-white/40 active:scale-95 transition-all text-center">
+                            Print
+                        </button>
+<button class="flex-1 px-4 py-3 rounded-xl bg-gradient-to-br from-emerald-lush to-emerald-deep text-on-primary font-title-lg text-title-lg shadow-[0_4px_12px_rgba(5,150,105,0.3)] hover:opacity-90 active:scale-95 transition-all text-center" onclick="closePrescriptionModal(event)">
+                            Verify &amp; Close
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+        function closeRejectSheet(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('rejectSheet').classList.remove('open');
+            setTimeout(() => {
+                document.getElementById('rejectSheetOverlay').classList.remove('open');
+            }, 300); // Wait for slide down animation
+        }
+
+        function closePrescriptionModal(e) {
+             if(e) e.stopPropagation();
+             document.getElementById('prescriptionModal').classList.remove('open');
+        }
+    </script>
+</body></html>

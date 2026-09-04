@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Store Registration - RapidMedico</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#a6d0ba",
+                    "secondary": "#406654",
+                    "background": "#f2fcf4",
+                    "on-tertiary-container": "#fffbff",
+                    "surface": "#f2fcf4",
+                    "inverse-surface": "#2a322e",
+                    "surface-dim": "#d3dcd5",
+                    "on-surface-variant": "#3d4a42",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#f5fff6",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#bccac0",
+                    "primary-fixed": "#82f9c0",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "primary-container": "#00855a",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-primary-fixed": "#002113",
+                    "inverse-primary": "#65dca6",
+                    "surface-container-highest": "#dbe5de",
+                    "surface-variant": "#dbe5de",
+                    "emerald-lush": "#10B981",
+                    "on-background": "#151d19",
+                    "secondary-fixed": "#c2ecd5",
+                    "primary-fixed-dim": "#65dca6",
+                    "tertiary-container": "#a36700",
+                    "on-primary-fixed-variant": "#005236",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed-variant": "#284e3d",
+                    "surface-container-high": "#e1eae3",
+                    "on-secondary-fixed": "#002114",
+                    "primary": "#006a47",
+                    "error": "#ba1a1a",
+                    "glass-border": "rgba(255, 255, 255, 0.6)",
+                    "inverse-on-surface": "#eaf3ec",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#ecf6ef",
+                    "on-secondary-container": "#446a58",
+                    "on-tertiary-fixed": "#2a1700",
+                    "sage-bottom": "#E2E8E4",
+                    "surface-tint": "#006c49",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#f2fcf4",
+                    "emerald-deep": "#059669",
+                    "sage-top": "#F4F7F5",
+                    "on-secondary": "#ffffff",
+                    "outline": "#6d7a71",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "surface-container": "#e7f0e9",
+                    "secondary-container": "#bfe9d2",
+                    "tertiary": "#825100",
+                    "on-surface": "#151d19"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "container-max": "1280px",
+                    "unit": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": [
+                            "Hanken Grotesk"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "display-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "title-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.03em",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "title-lg": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background: linear-gradient(180deg, theme('colors.sage-top') 0%, theme('colors.sage-bottom') 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3));
+            backdrop-filter: blur(16px);
+            border: 1px solid theme('colors.glass-border');
+            box-shadow: 0 8px 32px -8px rgba(5, 150, 105, 0.1);
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid theme('colors.outline-variant');
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: theme('colors.emerald-lush');
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), inset 0 2px 4px rgba(0,0,0,0.02);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="text-on-background font-body-md antialiased overflow-x-hidden flex flex-col items-center justify-center py-12 md:py-24 px-margin-mobile md:px-margin-desktop">
+<!-- Transactional Screen - No Global Nav Shell -->
+<header class="w-full max-w-2xl mx-auto flex items-center justify-between mb-12">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-emerald-deep text-3xl" style="font-variation-settings: 'FILL' 1;">local_pharmacy</span>
+<span class="font-display-lg text-display-lg text-emerald-deep tracking-tighter">RapidMedico</span>
+</div>
+<a class="text-emerald-lush hover:text-emerald-deep transition-colors font-label-sm text-label-sm flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">close</span>
+            Cancel
+        </a>
+</header>
+<main class="w-full max-w-2xl mx-auto glass-card rounded-xl p-6 md:p-10 relative overflow-hidden">
+<!-- Decorative glowing orb -->
+<div class="absolute -top-32 -right-32 w-64 h-64 bg-emerald-lush/10 rounded-full blur-3xl pointer-events-none"></div>
+<!-- Progress Stepper -->
+<div class="mb-10 relative">
+<div class="flex items-center justify-between relative z-10">
+<!-- Step 1 (Active) -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-lush to-emerald-deep text-on-primary flex items-center justify-center font-title-lg text-title-lg shadow-[0_4px_12px_rgba(5,150,105,0.3)] ring-4 ring-white/50">
+                        1
+                    </div>
+<span class="font-label-sm text-label-sm text-emerald-deep">Details</span>
+</div>
+<!-- Connector 1 -->
+<div class="flex-1 h-1 mx-4 bg-outline-variant/30 rounded-full relative overflow-hidden">
+<div class="absolute inset-y-0 left-0 w-1/4 bg-emerald-lush/50 rounded-full"></div>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center gap-2 opacity-50">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-title-lg text-title-lg border border-outline-variant/50">
+                        2
+                    </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Docs</span>
+</div>
+<!-- Connector 2 -->
+<div class="flex-1 h-1 mx-4 bg-outline-variant/30 rounded-full"></div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center gap-2 opacity-50">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-title-lg text-title-lg border border-outline-variant/50">
+                        3
+                    </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Verify</span>
+</div>
+</div>
+</div>
+<div class="mb-8">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-2">Basic Information</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Let's start with your store's essential details to get you registered on RapidMedico.</p>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Business Name -->
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface" for="businessName">Business Name</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">storefront</span>
+</div>
+<input class="input-field block w-full pl-10 pr-3 py-3 rounded-lg text-on-background placeholder-outline font-body-md text-body-md" id="businessName" name="businessName" placeholder="e.g. HealthPlus Pharmacy" type="text"/>
+</div>
+</div>
+<!-- Owner Name -->
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface" for="ownerName">Owner Full Name</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">person</span>
+</div>
+<input class="input-field block w-full pl-10 pr-3 py-3 rounded-lg text-on-background placeholder-outline font-body-md text-body-md" id="ownerName" name="ownerName" placeholder="John Doe" type="text"/>
+</div>
+</div>
+</div>
+<!-- Category -->
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface" for="category">Store Category</label>
+<div class="relative">
+<select class="input-field block w-full pl-3 pr-10 py-3 rounded-lg text-on-background font-body-md text-body-md appearance-none" id="category" name="category">
+<option disabled="" selected="" value="">Select a category</option>
+<option value="retail">Retail Pharmacy</option>
+<option value="wholesale">Wholesale Distributor</option>
+<option value="clinic">Clinic Dispensary</option>
+<option value="surgical">Surgical Supplies</option>
+</select>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- City -->
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface" for="city">City</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">location_city</span>
+</div>
+<input class="input-field block w-full pl-10 pr-3 py-3 rounded-lg text-on-background placeholder-outline font-body-md text-body-md" id="city" name="city" placeholder="City Name" type="text"/>
+</div>
+</div>
+<!-- Address -->
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface" for="address">Full Address</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">location_on</span>
+</div>
+<input class="input-field block w-full pl-10 pr-3 py-3 rounded-lg text-on-background placeholder-outline font-body-md text-body-md" id="address" name="address" placeholder="123 Main St, Suite 4B" type="text"/>
+</div>
+</div>
+</div>
+<div class="pt-6 mt-6 border-t border-glass-border flex justify-end">
+<button class="group bg-gradient-to-br from-emerald-lush to-emerald-deep hover:from-emerald-deep hover:to-primary text-on-primary font-title-lg text-title-lg px-8 py-4 rounded-xl shadow-[0_8px_20px_-4px_rgba(5,150,105,0.4)] hover:shadow-[0_12px_24px_-4px_rgba(5,150,105,0.5)] transition-all duration-300 flex items-center gap-3 active:scale-95" type="button">
+                    NEXT
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</form>
+</main>
+</body></html>
