@@ -1,79 +1,87 @@
 export const colors = {
   brand: {
-    primary: '#0F9D6C',
-    primaryLight: '#E6F5F0',
-    primaryDark: '#0B7A54',
+    primary: '#006a47', // emerald-deep equivalent
+    primaryLight: '#82f9c0', // primary-fixed
+    primaryDark: '#005236',
   },
   action: {
-    accept: '#1E8E5A',
-    acceptPressed: '#166E45',
-    reject: '#D93025',
-    rejectPressed: '#B3261E',
+    accept: '#10B981', // emerald-lush
+    acceptPressed: '#059669', // emerald-deep
+    reject: '#ba1a1a', // error
+    rejectPressed: '#93000a',
   },
   alert: {
-    urgent: '#E53935',
-    urgentLight: '#FFEBEE',
+    urgent: '#ba1a1a',
+    urgentLight: '#ffdad6',
   },
   background: {
-    primary: '#FFFFFF',
-    secondary: '#F5F7F6',
-    tertiary: '#EFEFEF',
+    primary: '#f2fcf4', // surface-bright
+    secondary: '#e7f0e9', // surface-container
+    tertiary: '#dbe5de', // surface-variant
+    sageTop: '#F4F7F5',
+    sageBottom: '#E2E8E4',
   },
   text: {
-    primary: '#121815',
-    secondary: '#5B6B64',
-    muted: '#8B9B94',
-    inverse: '#FFFFFF',
+    primary: '#151d19', // on-surface
+    secondary: '#3d4a42', // on-surface-variant
+    muted: '#6d7a71', // outline
+    inverse: '#ffffff', // on-primary
   },
   border: {
-    default: '#E1E7E4',
-    focus: '#0F9D6C',
-    alert: '#F5C6CB',
+    default: '#bccac0', // outline-variant
+    focus: '#10B981', // emerald-lush
+    alert: '#ffdad6',
+    glass: 'rgba(255, 255, 255, 0.6)',
   },
   status: {
-    warning: '#C97A1F',
-    warningLight: '#FFF8E7',
-    success: '#1E8E5A',
-    info: '#1976D2',
-    neutral: '#757575',
+    warning: '#825100', // tertiary
+    warningLight: '#ffddb8', // tertiary-fixed
+    success: '#10B981',
+    info: '#00855a', // primary-container
+    neutral: '#6d7a71',
   }
 };
 
 export const typography = {
   display: {
-    fontSize: 30,
+    fontSize: 48,
+    fontWeight: '800' as const,
+    lineHeight: 56,
+  },
+  h1: {
+    fontSize: 32,
+    fontWeight: '700' as const,
+    lineHeight: 40,
+  },
+  h2: {
+    fontSize: 28,
     fontWeight: '700' as const,
     lineHeight: 36,
   },
-  h1: {
-    fontSize: 24,
+  h3: {
+    fontSize: 20,
     fontWeight: '600' as const,
-    lineHeight: 30,
-  },
-  h2: {
-    fontSize: 19,
-    fontWeight: '600' as const,
-    lineHeight: 24,
+    lineHeight: 28,
   },
   body: {
     fontSize: 16,
     fontWeight: '400' as const,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   bodyStrong: {
     fontSize: 16,
     fontWeight: '600' as const,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   caption: {
-    fontSize: 13,
-    fontWeight: '400' as const,
-    lineHeight: 18,
+    fontSize: 12,
+    fontWeight: '600' as const,
+    lineHeight: 16,
   },
   button: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    lineHeight: 22,
+    fontSize: 18,
+    fontWeight: '400' as const,
+    lineHeight: 28,
   }
 };
 
@@ -85,21 +93,21 @@ export const spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
-  huge: 48,
+  huge: 64, // margin-desktop
 };
 
 export const components = {
   button: {
-    minHeightPrimary: 56, // 56dp per spec section 69
+    minHeightPrimary: 56,
     minHeightSecondary: 48,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   card: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 24, // rounded-xl
+    padding: 24,
   },
   badge: {
-    borderRadius: 8,
+    borderRadius: 9999, // full
   },
   shadows: {
     sm: {
@@ -110,18 +118,19 @@ export const components = {
       elevation: 2,
     },
     md: {
-      shadowColor: '#000',
+      shadowColor: '#059669', // tinted green shadow
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
       elevation: 4,
     },
     lg: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
+      shadowColor: '#059669',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.2,
+      shadowRadius: 30,
       elevation: 8,
     }
   }
 };
+

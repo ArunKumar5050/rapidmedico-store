@@ -9,10 +9,10 @@ export const useOrderQueue = () => {
   const { activeOrders, completedOrders, setActiveOrders, setCompletedOrders, setActiveAlertOrder } = useOrderStore();
 
   useEffect(() => {
-    if (!storeId) return;
+    const activeStoreId = storeId || '';
 
     // Live subscription for assigned active orders
-    const unsubscribeActive = FirestoreService.subscribeActiveOrders(storeId, (orders) => {
+    const unsubscribeActive = FirestoreService.subscribeActiveOrders(activeStoreId, (orders) => {
       setActiveOrders(orders);
 
       // Trigger Alert Modal if a NEW unhandled order is in queue
@@ -26,7 +26,7 @@ export const useOrderQueue = () => {
       }
     });
 
-    const unsubscribeHistory = FirestoreService.subscribeOrderHistory(storeId, (orders) => {
+    const unsubscribeHistory = FirestoreService.subscribeOrderHistory(activeStoreId, (orders) => {
       setCompletedOrders(orders);
     });
 

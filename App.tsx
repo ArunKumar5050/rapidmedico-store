@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { StatusBar as RNStatusBar, Platform } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootNavigator } from './src/nav/navigation/RootNavigator';
 import { orderAlertService } from './src/services/alert/orderAlertService';
@@ -15,6 +16,11 @@ const queryClient = new QueryClient({
 
 export default function App() {
   useEffect(() => {
+    // Make status bar transparent on Android
+    if (Platform.OS === 'android') {
+      RNStatusBar.setTranslucent(true);
+      RNStatusBar.setBackgroundColor('transparent');
+    }
     orderAlertService.initializeNotificationChannel().catch((err) => {
       console.warn('[App] Notification channel init warning:', err);
     });
@@ -22,7 +28,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" backgroundColor="transparent" translucent />
       <RootNavigator />
     </QueryClientProvider>
   );

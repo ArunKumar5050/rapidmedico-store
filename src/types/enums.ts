@@ -4,6 +4,8 @@ export enum OrderStatus {
   Preparing = 'PREPARING',
   Ready = 'READY',
   DeliveryRequested = 'DELIVERY_REQUESTED',
+  DeliveryPartnerAssigned = 'DELIVERY_PARTNER_ASSIGNED',
+  OutOfDelivery = 'OUT_OF_DELIVERY',
   PickedUp = 'PICKED_UP',
   Completed = 'COMPLETED',
   Rejected = 'REJECTED',

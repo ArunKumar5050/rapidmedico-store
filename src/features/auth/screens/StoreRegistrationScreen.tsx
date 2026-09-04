@@ -1,16 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, Alert, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Alert, TouchableOpacity, Modal, FlatList, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Location from 'expo-location';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { MaterialIcons } from '@expo/vector-icons';
 import { StoreRegistrationSchema, StoreRegistrationInput } from '../../../utils/schemas';
-import { colors, typography, spacing } from '../../../theme/tokens';
-import { Button } from '../../../components/ui/Button';
 import { AuthService } from '../../../services/firebase/auth';
 import { FirestoreService } from '../../../services/firebase/firestore';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { KycStatus, AvailabilityStatus } from '../../../types/enums';
+
+const { width, height } = Dimensions.get('window');
+
+// Colors matching tailwind config exactly
+const C = {
+  emeraldDeep: '#059669',
+  emeraldLush: '#10B981',
+  sageTop: '#F4F7F5',
+  sageBottom: '#E2E8E4',
+  secondaryFixed: '#c2ecd5',
+  primaryFixed: '#82f9c0',
+  onSurface: '#151d19',
+  onSurfaceVariant: '#3d4a42',
+  outlineVariant: '#bccac0',
+  onPrimary: '#ffffff',
+  glassBorder: 'rgba(255, 255, 255, 0.6)',
+  onBackground: '#151d19',
+  outline: '#6d7a71',
+  primary: '#006a47',
+  error: '#ba1a1a',
+};
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -28,6 +50,7 @@ export const StoreRegistrationScreen = ({ navigation }: any) => {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [stateModalVisible, setStateModalVisible] = useState(false);
   const [stateSearch, setStateSearch] = useState('');
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const { setStore, setAuthUser } = useAuthStore();
 
   const {
@@ -81,10 +104,8 @@ export const StoreRegistrationScreen = ({ navigation }: any) => {
   const onSubmit = async (data: StoreRegistrationInput) => {
     setLoading(true);
     try {
-      // 1. Register user in Firebase Auth using their entered password
       const user = await AuthService.registerWithEmail(data.email.trim(), data.password);
 
-      // 2. Create Store Profile with location coordinates
       const newStore: any = {
         storeId: user.uid,
         businessName: data.businessName,
@@ -119,7 +140,6 @@ export const StoreRegistrationScreen = ({ navigation }: any) => {
       await FirestoreService.createStoreProfile(newStore);
       await FirestoreService.createStoreUser(user.uid, user.uid, data.email.trim(), 'OWNER');
 
-      // 3. Update Auth Store
       setAuthUser(user.uid, data.email.trim());
       setStore(newStore);
 
@@ -147,320 +167,526 @@ export const StoreRegistrationScreen = ({ navigation }: any) => {
     }
   };
 
+  const InputField = ({ name, icon, placeholder, keyboardType = 'default', secureTextEntry = false, maxLength }: any) => (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.label}>{placeholder.split(' ')[0]} *</Text>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field: { onChange, value } }) => (
+          <View style={styles.inputWrapper}>
+            <View style={styles.inputIconContainer}>
+              <MaterialIcons name={icon} size={20} color={C.outline} />
+            </View>
+            <TextInput
+              style={[
+                styles.input,
+                focusedField === name && styles.inputFocused,
+                errors[name as keyof StoreRegistrationInput] && styles.inputError
+              ]}
+              placeholder={placeholder}
+              placeholderTextColor={C.outline}
+              keyboardType={keyboardType}
+              secureTextEntry={secureTextEntry}
+              autoCapitalize="none"
+              maxLength={maxLength}
+              value={value}
+              onChangeText={onChange}
+              onFocus={() => setFocusedField(name)}
+              onBlur={() => setFocusedField(null)}
+            />
+          </View>
+        )}
+      />
+      {errors[name as keyof StoreRegistrationInput] && (
+        <Text style={styles.errorText}>{errors[name as keyof StoreRegistrationInput]?.message as string}</Text>
+      )}
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Rapidmedi Partner</Text>
-        <Text style={styles.subtitle}>Register your pharmacy to become a fulfillment hub</Text>
+    <View style={styles.container}>
+      <LinearGradient colors={[C.sageTop, C.sageBottom, C.secondaryFixed]} style={StyleSheet.absoluteFillObject} />
+      
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          
+          <View style={styles.mainContainer}>
+            {/* Header */}
+            <View style={styles.topHeader}>
+              <View style={styles.logoContainer}>
+                <MaterialIcons name="local-pharmacy" size={32} color={C.emeraldDeep} />
+                <Text style={styles.logoText}>RapidMedico</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelButton}>
+                <MaterialIcons name="close" size={18} color={C.emeraldLush} />
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Pharmacy / Business Name *</Text>
-          <Controller
-            control={control}
-            name="businessName"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.businessName && styles.inputError]}
-                placeholder="Enter pharmacy / store name"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.businessName && <Text style={styles.errorText}>{errors.businessName.message}</Text>}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Owner Full Name *</Text>
-          <Controller
-            control={control}
-            name="ownerName"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.ownerName && styles.inputError]}
-                placeholder="Enter owner full name"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.ownerName && <Text style={styles.errorText}>{errors.ownerName.message}</Text>}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Login Email Address *</Text>
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="Enter email address"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Create Account Password *</Text>
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
-                placeholder="Enter password (min 6 characters)"
-                secureTextEntry
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Store Contact Phone (E.164) *</Text>
-          <Controller
-            control={control}
-            name="phone"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.phone && styles.inputError]}
-                placeholder="+91 Mobile number"
-                keyboardType="phone-pad"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.phone && <Text style={styles.errorText}>{errors.phone.message}</Text>}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Shop / Street Address *</Text>
-          <Controller
-            control={control}
-            name="streetAddress"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.streetAddress && styles.inputError]}
-                placeholder="Door/Shop No., Street, Area & Landmark"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.streetAddress && <Text style={styles.errorText}>{errors.streetAddress.message}</Text>}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>City *</Text>
-          <Controller
-            control={control}
-            name="city"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.city && styles.inputError]}
-                placeholder="Enter city name"
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.city && <Text style={styles.errorText}>{errors.city.message}</Text>}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>State *</Text>
-          <Controller
-            control={control}
-            name="state"
-            render={({ field: { onChange, value } }) => (
-              <>
-                <TouchableOpacity
-                  style={[styles.pickerTile, errors.state && styles.inputError]}
-                  onPress={() => setStateModalVisible(true)}
-                >
-                  <Text style={value ? styles.pickerTextSelected : styles.pickerTextPlaceholder}>
-                    {value || 'Select State / Union Territory'}
-                  </Text>
-                  <Text style={styles.pickerArrow}>▼</Text>
-                </TouchableOpacity>
-
-                <Modal
-                  visible={stateModalVisible}
-                  animationType="slide"
-                  transparent={true}
-                  onRequestClose={() => setStateModalVisible(false)}
-                >
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Select State / UT</Text>
-                        <TouchableOpacity onPress={() => setStateModalVisible(false)}>
-                          <Text style={styles.closeBtn}>✕</Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search state..."
-                        value={stateSearch}
-                        onChangeText={setStateSearch}
-                      />
-
-                      <FlatList
-                        data={INDIAN_STATES.filter((s) => s.toLowerCase().includes(stateSearch.toLowerCase()))}
-                        keyExtractor={(item) => item}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            style={[styles.stateItem, value === item && styles.stateItemSelected]}
-                            onPress={() => {
-                              onChange(item);
-                              setStateModalVisible(false);
-                              setStateSearch('');
-                            }}
-                          >
-                            <Text style={[styles.stateItemText, value === item && styles.stateItemTextSelected]}>
-                              {item}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      />
-                    </View>
+            {/* Main Card */}
+            <View style={styles.glassWrapper}>
+              {/* Decorative Orb */}
+              <View style={[styles.orb, styles.orbTopRight]} />
+              
+              <BlurView intensity={70} tint="light" style={styles.glassCard}>
+                
+                {/* Progress Stepper */}
+                <View style={styles.stepperContainer}>
+                  <View style={styles.stepperLine}>
+                    <View style={styles.stepperLineActive} />
                   </View>
-                </Modal>
-              </>
-            )}
-          />
-          {errors.state && <Text style={styles.errorText}>{errors.state.message}</Text>}
-        </View>
+                  <View style={styles.step}>
+                    <LinearGradient colors={[C.emeraldLush, C.emeraldDeep]} style={styles.stepCircleActive}>
+                      <Text style={styles.stepCircleTextActive}>1</Text>
+                    </LinearGradient>
+                    <Text style={styles.stepLabelActive}>Details</Text>
+                  </View>
+                  <View style={styles.step}>
+                    <View style={styles.stepCircleInactive}>
+                      <Text style={styles.stepCircleTextInactive}>2</Text>
+                    </View>
+                    <Text style={styles.stepLabelInactive}>Docs</Text>
+                  </View>
+                  <View style={styles.step}>
+                    <View style={styles.stepCircleInactive}>
+                      <Text style={styles.stepCircleTextInactive}>3</Text>
+                    </View>
+                    <Text style={styles.stepLabelInactive}>Verify</Text>
+                  </View>
+                </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Pincode / Postal Code *</Text>
-          <Controller
-            control={control}
-            name="pincode"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, errors.pincode && styles.inputError]}
-                placeholder="6-digit postal pincode"
-                keyboardType="number-pad"
-                maxLength={6}
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.pincode && <Text style={styles.errorText}>{errors.pincode.message}</Text>}
-        </View>
+                {/* Form Header */}
+                <View style={styles.formHeader}>
+                  <Text style={styles.title}>Basic Information</Text>
+                  <Text style={styles.subtitle}>
+                    Let's start with your store's essential details to get you registered on RapidMedico.
+                  </Text>
+                </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Store Location Coordinates</Text>
-          <Button
-            title={fetchingLocation ? "FETCHING LOCATION..." : coords ? `LAT: ${coords.latitude.toFixed(4)}, LNG: ${coords.longitude.toFixed(4)}` : "GET CURRENT LOCATION COORDINATES"}
-            variant="outline"
-            loading={fetchingLocation}
-            onPress={handleFetchLocation}
-            style={styles.locationBtn}
-          />
-          {coords && (
-            <Text style={styles.successText}>
-              Location set: Lat {coords.latitude.toFixed(6)}, Lng {coords.longitude.toFixed(6)}
-            </Text>
-          )}
-        </View>
+                {/* Form Fields */}
+                <InputField name="businessName" icon="storefront" placeholder="Business Name e.g. HealthPlus" />
+                <InputField name="ownerName" icon="person" placeholder="Owner Full Name" />
+                <InputField name="email" icon="email" placeholder="Email Address" keyboardType="email-address" />
+                <InputField name="password" icon="lock" placeholder="Create Password" secureTextEntry />
+                <InputField name="phone" icon="phone" placeholder="Phone Number" keyboardType="phone-pad" />
+                
+                {/* Category Picker Placeholder (simplified as TextInput for now) */}
+                <InputField name="category" icon="category" placeholder="Category (e.g. PHARMACY)" />
 
-        <Button
-          title="REGISTER STORE"
-          size="large"
-          loading={loading}
-          onPress={handleSubmit(onSubmit)}
-          style={styles.submitBtn}
-        />
-      </ScrollView>
-    </SafeAreaView>
+                <InputField name="city" icon="location-city" placeholder="City Name" />
+                <InputField name="streetAddress" icon="location-on" placeholder="Full Address" />
+                
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>State *</Text>
+                  <Controller
+                    control={control}
+                    name="state"
+                    render={({ field: { onChange, value } }) => (
+                      <View style={styles.inputWrapper}>
+                        <View style={styles.inputIconContainer}>
+                          <MaterialIcons name="map" size={20} color={C.outline} />
+                        </View>
+                        <TouchableOpacity
+                          style={[
+                            styles.input,
+                            { justifyContent: 'center' },
+                            errors.state && styles.inputError
+                          ]}
+                          onPress={() => setStateModalVisible(true)}
+                        >
+                          <Text style={value ? styles.pickerTextSelected : styles.pickerTextPlaceholder}>
+                            {value || 'Select State'}
+                          </Text>
+                        </TouchableOpacity>
+                        <View style={styles.pickerIconContainer}>
+                          <MaterialIcons name="expand-more" size={20} color={C.outline} />
+                        </View>
+                      </View>
+                    )}
+                  />
+                  {errors.state && <Text style={styles.errorText}>{errors.state.message}</Text>}
+                </View>
+
+                <InputField name="pincode" icon="pin-drop" placeholder="Pincode" keyboardType="number-pad" maxLength={6} />
+
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Store Location Coordinates</Text>
+                  <TouchableOpacity
+                    style={styles.locationBtn}
+                    onPress={handleFetchLocation}
+                    disabled={fetchingLocation}
+                  >
+                    <MaterialIcons name="my-location" size={20} color={C.emeraldDeep} />
+                    <Text style={styles.locationBtnText}>
+                      {fetchingLocation ? "FETCHING..." : coords ? `LAT: ${coords.latitude.toFixed(4)}, LNG: ${coords.longitude.toFixed(4)}` : "GET CURRENT LOCATION"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Submit Button */}
+                <View style={styles.submitContainer}>
+                  <TouchableOpacity 
+                    style={styles.submitBtnContainer}
+                    activeOpacity={0.9}
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={loading}
+                  >
+                    <LinearGradient 
+                      colors={[C.emeraldLush, C.emeraldDeep]} 
+                      style={styles.submitBtnGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Text style={styles.submitBtnText}>{loading ? 'REGISTERING...' : 'NEXT'}</Text>
+                      {!loading && <MaterialIcons name="arrow-forward" size={24} color={C.onPrimary} />}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+
+              </BlurView>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* State Picker Modal */}
+      <Modal visible={stateModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select State</Text>
+              <TouchableOpacity onPress={() => setStateModalVisible(false)}>
+                <MaterialIcons name="close" size={24} color={C.onSurfaceVariant} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search state..."
+              value={stateSearch}
+              onChangeText={setStateSearch}
+            />
+            <FlatList
+              data={INDIAN_STATES.filter((s) => s.toLowerCase().includes(stateSearch.toLowerCase()))}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.stateItem}
+                  onPress={() => {
+                    setValue('state', item);
+                    setStateModalVisible(false);
+                    setStateSearch('');
+                  }}
+                >
+                  <Text style={styles.stateItemText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background.primary },
-  content: { padding: spacing.lg },
-  title: { ...typography.h1, color: colors.text.primary, marginBottom: spacing.xs },
-  subtitle: { ...typography.body, color: colors.text.secondary, marginBottom: spacing.xl },
-  fieldGroup: { marginBottom: spacing.md },
-  label: { ...typography.bodyStrong, color: colors.text.primary, marginBottom: spacing.xs },
-  input: {
-    backgroundColor: colors.background.secondary,
-    borderRadius: 12,
-    padding: spacing.md,
-    ...typography.body,
-    borderWidth: 1,
-    borderColor: colors.border.default,
+  container: {
+    flex: 1,
   },
-  inputError: { borderColor: colors.action.reject },
-  errorText: { ...typography.caption, color: colors.action.reject, marginTop: 4 },
-  successText: { ...typography.caption, color: colors.action.accept, marginTop: 6, fontWeight: '600' },
-  locationBtn: { marginTop: spacing.xs, borderColor: colors.brand.primary },
-  submitBtn: { marginTop: spacing.lg },
-  pickerTile: {
-    backgroundColor: colors.background.secondary,
-    borderRadius: 12,
-    padding: spacing.md,
+  safeArea: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
+    alignItems: 'center',
+    padding: 16,
+    paddingVertical: 32,
+  },
+  mainContainer: {
+    width: '100%',
+    maxWidth: 672, // max-w-2xl
+    zIndex: 10,
+  },
+  topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border.default,
+    marginBottom: 48,
   },
-  pickerTextPlaceholder: { ...typography.body, color: colors.text.secondary },
-  pickerTextSelected: { ...typography.bodyStrong, color: colors.text.primary },
-  pickerArrow: { fontSize: 12, color: colors.text.secondary },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  logoText: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: C.emeraldDeep,
+    letterSpacing: -1,
+  },
+  cancelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  cancelText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: C.emeraldLush,
+    textTransform: 'uppercase',
+  },
+  glassWrapper: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderWidth: 1,
+    borderColor: C.glassBorder,
+    shadowColor: C.emeraldDeep,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 32,
+    elevation: 4,
+  },
+  orb: {
+    position: 'absolute',
+    borderRadius: 9999,
+    opacity: 0.1,
+  },
+  orbTopRight: {
+    top: -128,
+    right: -128,
+    width: 256,
+    height: 256,
+    backgroundColor: C.emeraldLush,
+  },
+  glassCard: {
+    padding: 24,
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 40,
+    position: 'relative',
+    paddingHorizontal: 16,
+  },
+  stepperLine: {
+    position: 'absolute',
+    top: 20,
+    left: 40,
+    right: 40,
+    height: 4,
+    backgroundColor: 'rgba(188, 202, 192, 0.3)',
+    borderRadius: 2,
+    zIndex: -1,
+  },
+  stepperLineActive: {
+    width: '25%',
+    height: '100%',
+    backgroundColor: 'rgba(16, 185, 129, 0.5)',
+    borderRadius: 2,
+  },
+  step: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  stepCircleActive: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: C.emeraldDeep,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    borderWidth: 4,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  stepCircleInactive: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(219, 229, 222, 1)',
+    borderWidth: 1,
+    borderColor: 'rgba(188, 202, 192, 0.5)',
+  },
+  stepCircleTextActive: {
+    color: C.onPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  stepCircleTextInactive: {
+    color: C.onSurfaceVariant,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  stepLabelActive: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: C.emeraldDeep,
+  },
+  stepLabelInactive: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: C.onSurfaceVariant,
+  },
+  formHeader: {
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: C.onBackground,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: C.onSurfaceVariant,
+    lineHeight: 24,
+  },
+  fieldGroup: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: C.onSurface,
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    position: 'relative',
+  },
+  inputIconContainer: {
+    position: 'absolute',
+    left: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  pickerIconContainer: {
+    position: 'absolute',
+    right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: C.outlineVariant,
+    paddingVertical: 12,
+    paddingLeft: 40,
+    paddingRight: 12,
+    fontSize: 16,
+    color: C.onBackground,
+  },
+  inputFocused: {
+    borderColor: C.emeraldLush,
+    backgroundColor: '#ffffff',
+  },
+  inputError: {
+    borderColor: C.error,
+  },
+  errorText: {
+    color: C.error,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  pickerTextPlaceholder: {
+    color: C.outline,
+    fontSize: 16,
+  },
+  pickerTextSelected: {
+    color: C.onBackground,
+    fontSize: 16,
+  },
+  locationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderWidth: 1,
+    borderColor: C.emeraldLush,
+    borderRadius: 8,
+  },
+  locationBtnText: {
+    color: C.emeraldDeep,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  submitContainer: {
+    marginTop: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: C.glassBorder,
+    alignItems: 'flex-end',
+  },
+  submitBtnContainer: {
+    borderRadius: 12,
+    shadowColor: C.emeraldDeep,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+  submitBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+  },
+  submitBtnText: {
+    color: C.onPrimary,
+    fontSize: 20,
+    fontWeight: '600',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.background.primary,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
     maxHeight: '80%',
-    padding: spacing.lg,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: 16,
   },
-  modalTitle: { ...typography.h2, color: colors.text.primary },
-  closeBtn: { ...typography.h2, color: colors.text.secondary, paddingHorizontal: spacing.sm },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: C.onBackground,
+  },
   searchInput: {
-    backgroundColor: colors.background.secondary,
-    borderRadius: 10,
-    padding: spacing.md,
-    ...typography.body,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border.default,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
   },
   stateItem: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.default,
+    borderBottomColor: '#eee',
   },
-  stateItemSelected: {
-    backgroundColor: colors.brand.primaryLight,
-    borderRadius: 8,
+  stateItemText: {
+    fontSize: 16,
+    color: C.onBackground,
   },
-  stateItemText: { ...typography.body, color: colors.text.primary },
-  stateItemTextSelected: { ...typography.bodyStrong, color: colors.brand.primaryDark },
 });

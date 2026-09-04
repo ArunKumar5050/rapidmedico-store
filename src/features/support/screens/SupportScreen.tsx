@@ -8,7 +8,7 @@ export const SupportScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Rapidmedi Store Support</Text>
+        <Text style={styles.title}>RapidMedico Store Support</Text>
         <Text style={styles.subtitle}>Direct assistance for partner pharmacies.</Text>
         <Button title="Call Partner Helpline" onPress={() => alert('Dialing Store Support...')} style={{ marginBottom: spacing.md }} />
         <Button title="Report an Order Issue" variant="outline" onPress={() => alert('Report Issue Form')} />

@@ -59,6 +59,11 @@ export class FirestoreService {
     await updateDoc(docRef, { availability, updatedAt: new Date().toISOString() });
   }
 
+  static async updateStoreWorkingHours(storeId: string, workingHours: any): Promise<void> {
+    const docRef = doc(db, 'stores', storeId);
+    await updateDoc(docRef, { workingHours, updatedAt: new Date().toISOString() });
+  }
+
   static async updatePushToken(storeId: string, pushToken: string): Promise<void> {
     const docRef = doc(db, 'stores', storeId);
     await updateDoc(docRef, { expoPushToken: pushToken, updatedAt: new Date().toISOString() });
@@ -75,6 +80,111 @@ export class FirestoreService {
     });
   }
 
+  // HELPER: Map a Firestore document to StoreOrder
+  static mapDocToStoreOrder(id: string, data: any): StoreOrder & { _storeId?: string } {
+    let mappedStatus = OrderStatus.New;
+    const rawStatus = String(data.storeStatus || data.status || '').toUpperCase();
+    
+    if (rawStatus === 'OUT_OF_DELIVERY' || rawStatus === 'OUT_FOR_DELIVERY' || data.status === 'out_for_delivery' || data.status === 'out_of_delivery') {
+      mappedStatus = OrderStatus.OutOfDelivery;
+    } else if (rawStatus === 'DELIVERY_PARTNER_ASSIGNED' || data.status === 'delivery boy assigned' || data.status === 'delivery partner assigned') {
+      mappedStatus = OrderStatus.DeliveryPartnerAssigned;
+    } else if (rawStatus === 'DELIVERY_REQUESTED' || data.status === 'DELIVERY_REQUESTED') {
+      mappedStatus = OrderStatus.DeliveryRequested;
+    } else if (rawStatus === 'READY' || rawStatus === 'PACKED') {
+      mappedStatus = OrderStatus.Ready;
+    } else if (rawStatus === 'PREPARING') {
+      mappedStatus = OrderStatus.Preparing;
+    } else if (rawStatus === 'ACCEPTED' || rawStatus === 'CONFIRMED' || data.status === 'confirmed') {
+      mappedStatus = OrderStatus.Accepted;
+    } else if (rawStatus === 'COMPLETED' || rawStatus === 'PAID' || rawStatus === 'DELIVERED' || data.status === 'paid' || data.status === 'completed' || data.status === 'delivered') {
+      mappedStatus = OrderStatus.Completed;
+    } else if (rawStatus === 'REJECTED' || rawStatus === 'CANCELLED' || data.status === 'cancelled') {
+      mappedStatus = OrderStatus.Rejected;
+    } else if (rawStatus === 'TIMED_OUT') {
+      mappedStatus = OrderStatus.TimedOut;
+    } else if (data.storeStatus) {
+      mappedStatus = data.storeStatus as OrderStatus;
+    }
+
+    let orderItems = data.items;
+    if (!orderItems && data.medicines && Array.isArray(data.medicines)) {
+      orderItems = data.medicines.map((med: string, index: number) => ({
+        medicineId: `med-${index}`,
+        name: med,
+        quantity: 1,
+        price: data.price || 0
+      }));
+    } else if (!orderItems) {
+      orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }];
+    }
+
+    const assignedAtIso = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.assignedAt || data.createdAt || new Date().toISOString());
+    const respondByAtIso = new Date(new Date(assignedAtIso).getTime() + 90000).toISOString();
+    
+    let pUrls: string[] = [];
+    if (Array.isArray(data.prescriptionUrls)) pUrls = [...data.prescriptionUrls];
+    else if (typeof data.prescriptionUrls === 'string') pUrls = [data.prescriptionUrls];
+    if (data.prescriptionUrl) pUrls.push(data.prescriptionUrl);
+    if (data.imageUrl) pUrls.push(data.imageUrl);
+    if (Array.isArray(data.imageUrls)) pUrls = [...pUrls, ...data.imageUrls];
+    if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
+    if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
+    
+    const expectedOtp = data.storePickupOtp || data.pickupPin || data.pickupOtp || data.deliveryOtp || data.otp;
+
+    return {
+      id,
+      customerFirstName: data.userName || data.customerName || 'Customer',
+      status: mappedStatus,
+      items: orderItems,
+      prescriptionUrls: pUrls,
+      totalAmount: data.billAmount || data.price || data.totalAmount,
+      assignedAt: assignedAtIso,
+      respondByAt: respondByAtIso,
+      paymentStatus: data.paymentStatus,
+      storePickupOtp: expectedOtp,
+      deliveryOtp: data.deliveryOtp || expectedOtp,
+      pickupOtp: data.pickupOtp || expectedOtp,
+      otp: expectedOtp,
+      deliveryPartnerId: data.deliveryPartnerId,
+      deliveryPartnerName: data.deliveryPartnerName,
+      deliveryPartnerPhone: data.deliveryPartnerPhone,
+      deliveryPartnerVehicle: data.deliveryPartnerVehicle,
+      deliveryPartnerAssignedAt: data.deliveryPartnerAssignedAt,
+      _storeId: data.storeId
+    };
+  }
+
+  // Subscribe to a single order document in real-time
+  static subscribeOrder(orderId: string, onUpdate: (order: StoreOrder | null) => void) {
+    const docRef = doc(db, 'customOrders', orderId);
+    return onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        onUpdate(FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data()));
+      } else {
+        // Check backup 'orders' collection if not in customOrders
+        const altRef = doc(db, 'orders', orderId);
+        getDoc(altRef).then((altSnap) => {
+          if (altSnap.exists()) {
+            onUpdate(FirestoreService.mapDocToStoreOrder(altSnap.id, altSnap.data()));
+          } else {
+            onUpdate(null);
+          }
+        }).catch(() => onUpdate(null));
+      }
+    }, (error) => {
+      console.warn('[FirestoreService] subscribeOrder error:', error);
+      getDoc(docRef).then((snap) => {
+        if (snap.exists()) {
+          onUpdate(FirestoreService.mapDocToStoreOrder(snap.id, snap.data()));
+        } else {
+          onUpdate(null);
+        }
+      }).catch(() => onUpdate(null));
+    });
+  }
+
   // ORDERS (STORE PRIVACY Projection `storeOrders/{storeId}/orders`)
   static subscribeActiveOrders(storeId: string, onUpdate: (orders: StoreOrder[]) => void) {
     const ordersCol = collection(db, 'customOrders');
@@ -82,63 +192,21 @@ export class FirestoreService {
     const q = query(ordersCol, limit(100)); // Simpler query, filter on client to avoid index issues
     return onSnapshot(q, (snapshot) => {
       let orders = snapshot.docs
-        .map((docSnap) => {
-          const data = docSnap.data();
-          
-          // Determine status
-          let mappedStatus = OrderStatus.New;
-          if (data.storeStatus) {
-            mappedStatus = data.storeStatus as OrderStatus;
-          } else if (data.status === 'confirmed') {
-            mappedStatus = OrderStatus.Accepted;
-          } else if (data.status === 'paid' || data.status === 'completed') {
-            mappedStatus = OrderStatus.Completed;
-          }
-
-          // Map CustomOrder medicines array to StoreOrder items array
-          let orderItems = data.items;
-          if (!orderItems && data.medicines && Array.isArray(data.medicines)) {
-            orderItems = data.medicines.map((med: string, index: number) => ({
-              medicineId: `med-${index}`,
-              name: med,
-              quantity: 1,
-              price: data.price || 0
-            }));
-          } else if (!orderItems) {
-            orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }];
-          }
-
-          const assignedAtIso = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
-          const respondByAtIso = new Date(new Date(assignedAtIso).getTime() + 90000).toISOString();
-          
-          let pUrls: string[] = [];
-          if (Array.isArray(data.prescriptionUrls)) pUrls = [...data.prescriptionUrls];
-          else if (typeof data.prescriptionUrls === 'string') pUrls = [data.prescriptionUrls];
-          if (data.prescriptionUrl) pUrls.push(data.prescriptionUrl);
-          if (data.imageUrl) pUrls.push(data.imageUrl);
-          if (Array.isArray(data.imageUrls)) pUrls = [...pUrls, ...data.imageUrls];
-          if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
-          if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
-          
-          return {
-            id: docSnap.id,
-            customerFirstName: data.userName || 'Customer',
-            customerLastName: '',
-            status: mappedStatus,
-            items: orderItems,
-            prescriptionUrls: pUrls,
-            totalAmount: data.billAmount,
-            assignedAt: assignedAtIso,
-            respondByAt: respondByAtIso,
-            paymentStatus: data.paymentStatus,
-            _storeId: data.storeId // to filter
-          } as StoreOrder & { _storeId?: string };
-        })
+        .map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data()))
         .filter(o => 
-          // Only show orders that are either unassigned (New) or assigned to THIS store
-          (o.status === OrderStatus.New && !o._storeId) || o._storeId === storeId
+          // Show orders that are unassigned (New), assigned to this store, or show all if storeId not set yet
+          !storeId || (o.status === OrderStatus.New && !o._storeId) || o._storeId === storeId || !o._storeId
         )
-        .filter(o => [OrderStatus.New, OrderStatus.Accepted, OrderStatus.Preparing, OrderStatus.Ready, OrderStatus.DeliveryRequested].includes(o.status));
+        .filter(o => [
+          OrderStatus.New,
+          OrderStatus.Accepted,
+          OrderStatus.Preparing,
+          OrderStatus.Ready,
+          OrderStatus.DeliveryRequested,
+          OrderStatus.DeliveryPartnerAssigned,
+          OrderStatus.OutOfDelivery,
+          OrderStatus.PickedUp
+        ].includes(o.status));
 
       // Client-side sort to avoid missing Firestore Index errors
       orders = orders.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
@@ -148,45 +216,14 @@ export class FirestoreService {
 
   static subscribeOrderHistory(storeId: string, onUpdate: (orders: StoreOrder[]) => void) {
     const ordersCol = collection(db, 'customOrders');
-    const q = query(ordersCol, where('storeId', '==', storeId), limit(50));
+    const q = storeId 
+      ? query(ordersCol, where('storeId', '==', storeId), limit(50))
+      : query(ordersCol, limit(50));
+      
     return onSnapshot(q, (snapshot) => {
-      let orders = snapshot.docs.map((docSnap) => {
-          const data = docSnap.data();
-          let mappedStatus = data.storeStatus as OrderStatus || OrderStatus.Completed;
-          // Map CustomOrder medicines array to StoreOrder items array
-          let orderItems = data.items;
-          if (!orderItems && data.medicines && Array.isArray(data.medicines)) {
-            orderItems = data.medicines.map((med: string, index: number) => ({
-              medicineId: `med-${index}`,
-              name: med,
-              quantity: 1,
-              price: data.price || 0
-            }));
-          } else if (!orderItems) {
-            orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }];
-          }
-
-          let pUrls: string[] = [];
-          if (Array.isArray(data.prescriptionUrls)) pUrls = [...data.prescriptionUrls];
-          else if (typeof data.prescriptionUrls === 'string') pUrls = [data.prescriptionUrls];
-          if (data.prescriptionUrl) pUrls.push(data.prescriptionUrl);
-          if (data.imageUrl) pUrls.push(data.imageUrl);
-          if (Array.isArray(data.imageUrls)) pUrls = [...pUrls, ...data.imageUrls];
-          if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
-          if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
-
-          return {
-            id: docSnap.id,
-            customerFirstName: data.userName || 'Customer',
-            customerLastName: '',
-            status: mappedStatus,
-            items: orderItems,
-            prescriptionUrls: pUrls,
-            totalAmount: data.billAmount,
-            assignedAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-            respondByAt: new Date(Date.now() + 10 * 60000).toISOString() // Fake timeout
-          } as StoreOrder;
-      }).filter(o => [OrderStatus.Completed, OrderStatus.Rejected, OrderStatus.TimedOut].includes(o.status));
+      let orders = snapshot.docs
+        .map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data()))
+        .filter(o => [OrderStatus.Completed, OrderStatus.Rejected, OrderStatus.TimedOut].includes(o.status));
 
       orders = orders.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
       onUpdate(orders);
@@ -222,16 +259,118 @@ export class FirestoreService {
     });
   }
 
-  static async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
+  static async updateOrderStatus(orderId: string, status: OrderStatus | string): Promise<void> {
     const docRef = doc(db, 'customOrders', orderId);
     let customerAppStatus = 'confirmed';
     if (status === OrderStatus.Completed) customerAppStatus = 'completed';
+    else if (status === OrderStatus.DeliveryPartnerAssigned || status === 'delivery boy assigned') customerAppStatus = 'delivery boy assigned';
     
-    await updateDoc(docRef, {
+    const updateData: any = {
       storeStatus: status,
       status: customerAppStatus,
       updatedAt: new Date().toISOString()
-    });
+    };
+
+    // When store requests delivery partner, generate random 4-digit OTP and save to database
+    if (
+      status === OrderStatus.DeliveryRequested ||
+      status === 'DELIVERY_REQUESTED' ||
+      status === OrderStatus.Ready
+    ) {
+      const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      updateData.deliveryOtp = randomOtp;
+      updateData.pickupOtp = randomOtp;
+      updateData.storePickupOtp = randomOtp;
+      updateData.pickupPin = randomOtp;
+      updateData.otp = randomOtp;
+      updateData.deliveryRequestedAt = new Date().toISOString();
+    } else if (
+      status === OrderStatus.OutOfDelivery ||
+      status === 'OUT_OF_DELIVERY' ||
+      status === 'out_for_delivery' ||
+      status === OrderStatus.DeliveryPartnerAssigned ||
+      status === 'DELIVERY_PARTNER_ASSIGNED' ||
+      status === 'delivery boy assigned' ||
+      status === 'delivery partner assigned'
+    ) {
+      const randomDeliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      updateData.status = 'delivery boy assigned';
+      updateData.storeStatus = OrderStatus.OutOfDelivery;
+      updateData.deliveryStatus = 'en_route_delivery';
+      updateData.deliveryOtp = randomDeliveryOtp; // Generate OTP named 'deliveryOtp' in the database
+      updateData.otp = randomDeliveryOtp;
+      updateData.deliveryPartnerAssignedAt = new Date().toISOString();
+    }
+    
+    await updateDoc(docRef, updateData);
+  }
+
+  /**
+   * Verify store pickup OTP entered by the store owner with the "storePickupOtp" in database
+   * and transition order status to 'delivery boy assigned' with storeStatus 'OUT_OF_DELIVERY'
+   */
+  static async verifyAndConfirmStorePickup(orderId: string, enteredOtp: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const docRef = doc(db, 'customOrders', orderId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+        return { success: false, error: 'Order not found in database.' };
+      }
+
+      const data = snap.data();
+      // Specifically fetch storePickupOtp from Firestore document
+      const expectedOtp = data.storePickupOtp || data.pickupPin || data.pickupOtp || data.deliveryOtp || data.otp;
+
+      if (!expectedOtp) {
+        return { success: false, error: 'No pickup OTP found in database for this order.' };
+      }
+
+      // Verify the OTP provided by the delivery boy matches the storePickupOtp
+      if (String(expectedOtp).trim() !== String(enteredOtp).trim()) {
+        return { success: false, error: 'Invalid OTP. The code entered does not match the Delivery Partner’s Store Pickup OTP.' };
+      }
+
+      // Preserve existing deliveryOtp from customer order, or generate only if missing
+      const finalDeliveryOtp = data.deliveryOtp || data.otp || Math.floor(1000 + Math.random() * 9000).toString();
+      const nowIso = new Date().toISOString();
+      const updatePayload: any = {
+        status: 'delivery boy assigned',
+        storeStatus: OrderStatus.OutOfDelivery,
+        deliveryStatus: 'en_route_delivery',
+        deliveryOtp: finalDeliveryOtp,
+        otp: finalDeliveryOtp,
+        storeOtpConfirmed: true,
+        storePickupOtpVerified: true,
+        verifiedStorePickupOtp: String(enteredOtp).trim(),
+        pickedUpAt: nowIso,
+        deliveryPartnerAssignedAt: nowIso,
+        updatedAt: nowIso,
+      };
+
+      await updateDoc(docRef, updatePayload);
+
+      // Also update backup 'orders' collection if used
+      try {
+        const altRef = doc(db, 'orders', orderId);
+        await updateDoc(altRef, {
+          status: 'delivery boy assigned',
+          storeStatus: OrderStatus.OutOfDelivery,
+          deliveryStatus: 'en_route_delivery',
+          deliveryOtp: finalDeliveryOtp,
+          otp: finalDeliveryOtp,
+          storeOtpConfirmed: true,
+          storePickupOtpVerified: true,
+          verifiedStorePickupOtp: String(enteredOtp).trim(),
+          pickedUpAt: nowIso,
+          updatedAt: nowIso,
+        });
+      } catch (_) {}
+
+      return { success: true };
+    } catch (e: any) {
+      console.error('[FirestoreService] verifyAndConfirmStorePickup error:', e);
+      return { success: false, error: e.message || 'Failed to verify OTP.' };
+    }
   }
 
   // INVENTORY
@@ -282,6 +421,13 @@ export class FirestoreService {
   }
 
   // PERFORMANCE
+  static async fetchOrdersForMetrics(storeId: string): Promise<any[]> {
+    const ordersCol = collection(db, 'customOrders');
+    // Fetch all orders for this store
+    const q = query(ordersCol, where('storeId', '==', storeId));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
   static async getStorePerformance(storeId: string): Promise<StorePerformance | null> {
     const docRef = doc(db, 'stores', storeId, 'performance', 'summary');
     const snap = await getDoc(docRef);

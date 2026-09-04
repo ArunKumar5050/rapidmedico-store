@@ -6,7 +6,6 @@ import { AddMedicineScreen } from '../../features/inventory/screens/AddMedicineS
 import { EditMedicineScreen } from '../../features/inventory/screens/EditMedicineScreen';
 import { StoreSettingsScreen } from '../../features/profile/screens/StoreSettingsScreen';
 import { WorkingHoursScreen } from '../../features/profile/screens/WorkingHoursScreen';
-import { HolidayModeScreen } from '../../features/profile/screens/HolidayModeScreen';
 import { PerformanceDashboardScreen } from '../../features/profile/screens/PerformanceDashboardScreen';
 import { RatingsScreen } from '../../features/profile/screens/RatingsScreen';
 import { SupportScreen } from '../../features/support/screens/SupportScreen';
@@ -25,7 +24,6 @@ export const MainNavigator = () => {
       <Stack.Screen name="EditMedicine" component={EditMedicineScreen} options={{ title: 'Edit Stock' }} />
       <Stack.Screen name="StoreSettings" component={StoreSettingsScreen} options={{ title: 'Settings' }} />
       <Stack.Screen name="WorkingHours" component={WorkingHoursScreen} options={{ title: 'Working Hours' }} />
-      <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ title: 'Holiday Mode' }} />
       <Stack.Screen name="PerformanceDashboard" component={PerformanceDashboardScreen} options={{ title: 'Performance Metrics' }} />
       <Stack.Screen name="Ratings" component={RatingsScreen} options={{ title: 'Store Ratings' }} />
       <Stack.Screen name="Support" component={SupportScreen} options={{ title: 'Support' }} />

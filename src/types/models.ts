@@ -53,6 +53,15 @@ export interface StoreOrder {
   updatedAt?: string;
   totalAmount?: number;
   billGeneratedAt?: string;
+  storePickupOtp?: string;
+  deliveryOtp?: string;
+  pickupOtp?: string;
+  otp?: string;
+  deliveryPartnerId?: string;
+  deliveryPartnerName?: string;
+  deliveryPartnerPhone?: string;
+  deliveryPartnerVehicle?: string;
+  deliveryPartnerAssignedAt?: string;
   // STRICT PRIVACY ARCHITECTURE ENFORCED:
   // customerPhone, customerEmail, customerAddress, customerLat, customerLng, paymentMethod NEVER EXIST HERE.
 }

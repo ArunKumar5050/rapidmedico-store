@@ -20,7 +20,15 @@ export const TabNavigator = () => {
         headerShown: false,
         tabBarActiveTintColor: colors.brand.primary,
         tabBarInactiveTintColor: colors.text.muted,
-        tabBarStyle: { height: 60 + insets.bottom, paddingBottom: Math.max(8, insets.bottom), paddingTop: 8 },
+        tabBarStyle: { 
+          height: 60 + insets.bottom, 
+          paddingBottom: Math.max(8, insets.bottom), 
+          paddingTop: 8,
+          backgroundColor: '#f4f7f5', // Softer, matching background
+          borderTopColor: 'rgba(5,150,105,0.1)', // Subtle line
+          elevation: 0,
+          shadowOpacity: 0
+        },
         tabBarIcon: ({ color }) => {
           let icon = '🏠';
           if (route.name === 'DashboardTab') icon = '📊';

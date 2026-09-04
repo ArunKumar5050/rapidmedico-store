@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Rapidmedi Store",
+    "name": "RapidMedico Store",
     "slug": "rapidmedi-store",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,13 +14,13 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.rapidmedi.store",
       "infoPlist": {
-        "NSCameraUsageDescription": "Rapidmedi needs camera access to capture your documents and medicine photos.",
-        "NSPhotoLibraryUsageDescription": "Rapidmedi needs gallery access to attach an existing photo."
+        "NSCameraUsageDescription": "RapidMedico needs camera access to capture your documents and medicine photos.",
+        "NSPhotoLibraryUsageDescription": "RapidMedico needs gallery access to attach an existing photo."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0F9D6C"
       },
       "package": "com.rapidmedi.store",
@@ -54,15 +54,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Rapidmedi needs gallery access to attach an existing photo.",
-          "cameraPermission": "Rapidmedi needs camera access to capture your documents and medicine photos."
+          "photosPermission": "RapidMedico needs gallery access to attach an existing photo.",
+          "cameraPermission": "RapidMedico needs camera access to capture your documents and medicine photos."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Rapidmedi needs your location to set your store coordinates.",
-          "locationWhenInUsePermission": "Rapidmedi needs your location to set your store coordinates."
+          "locationAlwaysAndWhenInUsePermission": "RapidMedico needs your location to set your store coordinates.",
+          "locationWhenInUsePermission": "RapidMedico needs your location to set your store coordinates."
         }
       ],
       "expo-audio",

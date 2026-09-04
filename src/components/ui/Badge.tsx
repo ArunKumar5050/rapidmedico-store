@@ -13,9 +13,14 @@ export const Badge: React.FC<BadgeProps> = ({ label, status = 'neutral', style }
   const getColors = () => {
     switch (status) {
       case OrderStatus.New:
+      case OrderStatus.DeliveryRequested:
       case 'warning':
       case KycStatus.PendingReview:
         return { bg: colors.status.warningLight, text: colors.status.warning };
+      case OrderStatus.DeliveryPartnerAssigned:
+      case OrderStatus.OutOfDelivery:
+      case OrderStatus.PickedUp:
+        return { bg: '#E0F2FE', text: '#0284C7' }; // Vibrant Sky/Cyan for assigned / out for delivery partner
       case OrderStatus.Accepted:
       case OrderStatus.Preparing:
       case OrderStatus.Ready:
@@ -51,9 +56,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     alignSelf: 'flex-start',
+    flexShrink: 1,
   },
   text: {
     ...typography.caption,
     fontWeight: '600',
+    flexWrap: 'wrap',
   },
 });

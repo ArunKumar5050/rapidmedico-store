@@ -1,19 +1,33 @@
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// Set notification handler to show notifications even when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+const isExpoGo = Constants.appOwnership === 'expo';
+
+let Notifications: any = null;
+if (!isExpoGo) {
+  try {
+    Notifications = require('expo-notifications');
+    // Set notification handler to show notifications even when app is in foreground
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  } catch (e) {
+    console.warn("Could not load expo-notifications:", e);
+  }
+}
 
 export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
   let token;
+
+  if (isExpoGo) {
+    console.warn('Push notifications are not supported in Expo Go.');
+    return 'mock-expo-go-push-token';
+  }
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
