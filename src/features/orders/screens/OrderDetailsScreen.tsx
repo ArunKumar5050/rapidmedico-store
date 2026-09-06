@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, ActivityIndicator, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  ActivityIndicator,
+  Image,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { colors, typography, spacing, components } from '../../../theme/tokens';
+import { colors, typography, spacing } from '../../../theme/tokens';
 import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
 import { OrderStatus } from '../../../types/enums';
 import { StoreOrder, StoreOrderItem } from '../../../types/models';
 import { PrescriptionViewerModal } from '../modals/PrescriptionViewerModal';
@@ -29,7 +39,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { orderId } = route.params;
   const { activeOrders, completedOrders } = useOrderStore();
   const { storeId } = useAuthStore();
-  
+
   const [directOrder, setDirectOrder] = useState<StoreOrder | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
@@ -60,6 +70,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order?.status || OrderStatus.New);
   const [editableItems, setEditableItems] = useState<EditableItem[]>([]);
   const [isEditingBill, setIsEditingBill] = useState(false);
+  const [billSavedLocally, setBillSavedLocally] = useState(false);
 
   const [prescriptionModalVisible, setPrescriptionModalVisible] = useState(false);
   const [rejectSheetVisible, setRejectSheetVisible] = useState(false);
@@ -99,28 +110,28 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   if (!order) {
     if (loadingTimeout) {
       return (
-        <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: spacing.xl }]}>
-          <Text style={{ fontSize: 36, marginBottom: spacing.md }}>🔍</Text>
+        <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={[styles.container, styles.centerContent]}>
+          <Text style={{ fontSize: 44, marginBottom: spacing.md }}>🔍</Text>
           <Text style={[typography.h2, { color: colors.text.primary, marginBottom: spacing.xs, textAlign: 'center' }]}>
             Order Not Found
           </Text>
-          <Text style={[typography.body, { color: colors.text.secondary, marginBottom: spacing.lg, textAlign: 'center' }]}>
+          <Text style={[typography.body, { color: colors.text.secondary, marginBottom: spacing.lg, textAlign: 'center', maxWidth: 300 }]}>
             This order could not be loaded or may belong to another store.
           </Text>
           <Button
             title="Go Back to Orders"
             variant="primary"
             onPress={() => navigation.goBack()}
-            style={{ width: 200 }}
+            style={{ width: 220 }}
           />
         </LinearGradient>
       );
     }
 
     return (
-      <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color={colors.brand.primary} />
-        <Text style={[typography.caption, { color: colors.text.secondary, marginTop: spacing.md }]}>
+        <Text style={[typography.body, { color: colors.text.secondary, marginTop: spacing.md }]}>
           Loading order details...
         </Text>
       </LinearGradient>
@@ -129,17 +140,6 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
   const handleItemChange = (tempId: string, field: keyof EditableItem, value: string) => {
     setEditableItems(prev => prev.map(item => item.tempId === tempId ? { ...item, [field]: value } : item));
-  };
-
-  const handleRemoveItem = (tempId: string) => {
-    setEditableItems(prev => prev.filter(item => item.tempId !== tempId));
-  };
-
-  const handleAddItem = () => {
-    setEditableItems(prev => [
-      ...prev,
-      { tempId: `new-${Date.now()}`, name: '', quantity: '1', price: '' }
-    ]);
   };
 
   const calculateTotal = () => {
@@ -181,10 +181,9 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const [billSavedLocally, setBillSavedLocally] = useState(false);
   const hasSavedPrices = Boolean(
-    order?.totalAmount && 
-    order.totalAmount > 100 && 
+    order?.totalAmount &&
+    order.totalAmount > 100 &&
     order.items?.some((it: any) => (it.price || 0) > 0)
   );
   const isBillSaved = hasSavedPrices || billSavedLocally;
@@ -197,16 +196,10 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     String(currentStatus).toUpperCase() === 'PAID'
   );
 
-  const isAcceptedState = currentStatus === OrderStatus.Accepted || 
+  const isAcceptedState = currentStatus === OrderStatus.Accepted ||
                           String(currentStatus).toUpperCase() === 'ACCEPTED' ||
                           String(currentStatus).toUpperCase() === 'PAID';
 
-  const isNewOrPending = currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation;
-
-  // The price input is editable ONLY when:
-  // 1. Bill hasn't been saved yet (initial pricing), OR
-  // 2. Store explicitly clicked "Edit Bill", AND
-  // 3. Customer has not completed payment yet
   const isPriceInputEditable = !isPaid && (!isBillSaved || isEditingBill);
 
   const isPickupOtpVerified = Boolean(
@@ -214,6 +207,8 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     order?.storePickupOtpVerified === true ||
     order?.deliveryStatus === 'en_route_delivery' ||
     order?.deliveryStatus === 'delivered' ||
+    currentStatus === OrderStatus.OutOfDelivery ||
+    currentStatus === OrderStatus.PickedUp ||
     currentStatus === OrderStatus.Completed
   );
 
@@ -228,16 +223,19 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     String(currentStatus).toUpperCase() === 'DELIVERY_PARTNER_ASSIGNED'
   );
 
-  const isDeliveryActive = Boolean(
+  const isSearchingPartner = !isPartnerAssigned && !isPickupOtpVerified && (
     currentStatus === OrderStatus.DeliveryRequested ||
-    currentStatus === OrderStatus.DeliveryPartnerAssigned ||
-    isPartnerAssigned ||
-    order?.deliveryPartnerId ||
-    order?.storePickupOtp
+    String(order?.status).toUpperCase() === 'DELIVERY_REQUESTED' ||
+    String(order?.storeStatus).toUpperCase() === 'DELIVERY_REQUESTED'
   );
 
-  const showOtpCard = !isPickupOtpVerified && isDeliveryActive;
-  const showOutOfDeliveryCard = isPickupOtpVerified && (currentStatus === OrderStatus.OutOfDelivery || currentStatus === OrderStatus.PickedUp);
+  // OTP card is ONLY shown when partner is actually assigned and OTP not yet verified
+  const showOtpCard = !isPickupOtpVerified && isPartnerAssigned;
+  const showOutOfDeliveryCard = isPickupOtpVerified && (
+    currentStatus === OrderStatus.OutOfDelivery ||
+    currentStatus === OrderStatus.PickedUp ||
+    order?.deliveryStatus === 'en_route_delivery'
+  );
 
   const handleUpdateBill = async () => {
     let isValid = true;
@@ -260,16 +258,15 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
 
     if (!storeId) {
-       Alert.alert('Error', 'Store ID is not available.');
-       return;
+      Alert.alert('Error', 'Store ID is not available.');
+      return;
     }
 
     const totalAmount = calculateTotal();
     const collectionName = order?._collection || 'customOrders';
     try {
       await FirestoreService.updateOrderBill(storeId, orderId, updatedItems, totalAmount, collectionName);
-      
-      // Auto-accept order so customer receives the priced bill
+
       if (currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) {
         await FirestoreService.acceptOrder(storeId, orderId, collectionName);
         setCurrentStatus(OrderStatus.Accepted);
@@ -277,7 +274,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
       setBillSavedLocally(true);
       setIsEditingBill(false);
-      Alert.alert('Bill Updated & Locked! 🎉', 'The price has been saved. Customer can now view the bill and proceed to payment or select Cash on Delivery.');
+      Alert.alert('Bill Updated & Locked! 🎉', 'The price has been saved. Customer can now review the bill and complete payment or select Cash on Delivery.');
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to update bill.');
     }
@@ -302,7 +299,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         const res = await requestPartner(orderId, collectionName);
         if (res.success) {
           setCurrentStatus(OrderStatus.DeliveryRequested);
-          Alert.alert('Delivery Partner Requested 🛵', `Partner requested. Estimated pickup ETA: ${res.etaMinutes || 8} mins.`);
+          Alert.alert('Delivery Partner Requested 🛵', `Broadcasting to nearby delivery partners. Estimated pickup ETA: ${res.etaMinutes || 8} mins.`);
         }
       }
     } catch (e: any) {
@@ -310,391 +307,623 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
   };
 
+  // Pipeline Stepper State
+  const getStepStatus = (stepIndex: number) => {
+    // 0: Billed, 1: Paid, 2: Ready, 3: Dispatched
+    if (stepIndex === 0) return isBillSaved ? 'done' : 'active';
+    if (stepIndex === 1) return isPaid ? 'done' : (isBillSaved ? 'active' : 'pending');
+    if (stepIndex === 2) {
+      const isReadyOrLater = [
+        OrderStatus.Ready,
+        OrderStatus.DeliveryRequested,
+        OrderStatus.DeliveryPartnerAssigned,
+        OrderStatus.OutOfDelivery,
+        OrderStatus.PickedUp,
+        OrderStatus.Completed
+      ].includes(currentStatus);
+      return isReadyOrLater ? 'done' : (isPaid ? 'active' : 'pending');
+    }
+    if (stepIndex === 3) {
+      return isPickupOtpVerified || currentStatus === OrderStatus.OutOfDelivery || currentStatus === OrderStatus.Completed ? 'done' : 'pending';
+    }
+    return 'pending';
+  };
+
+  const getStatusBadgeConfig = () => {
+    if (isPickupOtpVerified || currentStatus === OrderStatus.OutOfDelivery) {
+      return { bg: '#E0F2FE', text: '#0369A1', border: '#7DD3FC', label: 'OUT FOR DELIVERY 🚀' };
+    }
+    if (isPartnerAssigned) {
+      return { bg: '#FEF3C7', text: '#B45309', border: '#F59E0B', label: 'RIDER AT STORE 🛵' };
+    }
+    if (isSearchingPartner) {
+      return { bg: '#FEF3C7', text: '#B45309', border: '#FCD34D', label: 'FINDING RIDER 🔍' };
+    }
+    switch (currentStatus) {
+      case OrderStatus.New:
+      case OrderStatus.PendingDoctorConfirmation:
+        return { bg: '#FEF3C7', text: '#92400E', border: '#FDE68A', label: 'NEW ORDER ✦' };
+      case OrderStatus.Accepted:
+        return { bg: '#EEF2FF', text: '#4338CA', border: '#C7D2FE', label: isPaid ? 'PAID / READY TO PREP' : 'BILLED / UNPAID' };
+      case OrderStatus.Preparing:
+        return { bg: '#F3E8FF', text: '#7E22CE', border: '#E9D5FF', label: 'PREPARING ⏳' };
+      case OrderStatus.Ready:
+        return { bg: '#ECFDF5', text: '#065F46', border: '#A7F3D0', label: 'PACKED & READY 📦' };
+      case OrderStatus.Completed:
+        return { bg: '#DCFCE7', text: '#166534', border: '#86EFAC', label: 'COMPLETED ✓' };
+      case OrderStatus.Rejected:
+        return { bg: '#FEE2E2', text: '#991B1B', border: '#FCA5A5', label: 'REJECTED ✕' };
+      default:
+        return { bg: '#F3F4F6', text: '#374151', border: '#E5E7EB', label: String(currentStatus).replace(/_/g, ' ').toUpperCase() };
+    }
+  };
+
+  const statusConfig = getStatusBadgeConfig();
+  const assignedTime = order.assignedAt ? new Date(order.assignedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
   return (
     <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        
-        {/* Header */}
-        <BlurView intensity={80} tint="light" style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+
+        {/* Clean Header with Single Back Button & Status Badge */}
+        <BlurView intensity={90} tint="light" style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>RapidMedico</Text>
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>{currentStatus.replace(/_/g, ' ')}</Text>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerMainTitle}>Order Details</Text>
+            <Text style={styles.headerSubId}>#{orderId.substring(0, 8).toUpperCase()}</Text>
+          </View>
+
+          <View style={[styles.headerStatusPill, { backgroundColor: statusConfig.bg, borderColor: statusConfig.border }]}>
+            <Text style={[styles.headerStatusText, { color: statusConfig.text }]}>
+              {statusConfig.label}
+            </Text>
           </View>
         </BlurView>
 
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.pageTitleContainer}>
-            <View>
-              <Text style={[styles.orderId, styles.textGlow]}>Order #{orderId.substring(0, 8).toUpperCase()}</Text>
-              <Text style={styles.timestamp}>Assigned: {new Date(order.assignedAt).toLocaleTimeString()}</Text>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+          {/* Hero Order Overview Card */}
+          <View style={styles.heroCard}>
+            <View style={styles.heroHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroOrderNumber}>Order #{orderId.substring(0, 8).toUpperCase()}</Text>
+                <Text style={styles.heroMetaText}>🕒 Assigned at {assignedTime}</Text>
+              </View>
+              <View style={styles.orderTypeTag}>
+                <Text style={styles.orderTypeTagText}>📋 Prescription Order</Text>
+              </View>
+            </View>
+
+            {/* Payment Chip */}
+            <View style={styles.paymentRow}>
+              <View style={[
+                styles.paymentChip,
+                isPaid ? styles.paymentChipPaid : styles.paymentChipPending
+              ]}>
+                <Text style={[
+                  styles.paymentChipText,
+                  isPaid ? styles.paymentChipTextPaid : styles.paymentChipTextPending
+                ]}>
+                  {isPaid 
+                    ? (order.paymentMethod === 'COD' ? '💵 Cash on Delivery Confirmed' : '✅ Paid Online')
+                    : '⏳ Payment / COD Selection Pending'}
+                </Text>
+              </View>
+            </View>
+
+            {/* 4-Step Pipeline Stepper */}
+            <View style={styles.stepperContainer}>
+              <View style={styles.stepperProgressLine} />
+              
+              {[
+                { label: '1. Billed', status: getStepStatus(0) },
+                { label: '2. Paid', status: getStepStatus(1) },
+                { label: '3. Ready', status: getStepStatus(2) },
+                { label: '4. Dispatched', status: getStepStatus(3) },
+              ].map((step, idx) => (
+                <View key={idx} style={styles.stepItem}>
+                  <View style={[
+                    styles.stepCircle,
+                    step.status === 'done' && styles.stepCircleDone,
+                    step.status === 'active' && styles.stepCircleActive,
+                    step.status === 'pending' && styles.stepCirclePending,
+                  ]}>
+                    <Text style={[
+                      styles.stepCircleText,
+                      step.status === 'done' && styles.stepCircleTextDone,
+                      step.status === 'active' && styles.stepCircleTextActive,
+                    ]}>
+                      {step.status === 'done' ? '✓' : idx + 1}
+                    </Text>
+                  </View>
+                  <Text style={[
+                    styles.stepLabel,
+                    step.status === 'active' && styles.stepLabelActive,
+                    step.status === 'done' && styles.stepLabelDone,
+                  ]}>
+                    {step.label}
+                  </Text>
+                </View>
+              ))}
             </View>
           </View>
 
+          {/* Contextual Action Banner */}
           {!isBillSaved && (currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && (
-            <LinearGradient colors={['#F59E0B', '#D97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.amberGradient}>
-              <Text style={styles.amberGradientIcon}>⚠️</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.amberGradientTitle}>Action Required: Enter Medicine Prices</Text>
-                <Text style={styles.amberGradientDesc}>Enter the prices below and tap "Update Bill" so the customer can proceed to payment or select COD.</Text>
+            <View style={styles.bannerWarning}>
+              <View style={styles.bannerIconBox}>
+                <Text style={styles.bannerIcon}>⚠️</Text>
               </View>
-            </LinearGradient>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.bannerTitle}>Action Needed: Set Medicine Prices</Text>
+                <Text style={styles.bannerDesc}>
+                  Enter the unit price for each medicine below and tap "Update Bill" so the customer can review and proceed.
+                </Text>
+              </View>
+            </View>
           )}
 
           {isBillSaved && (currentStatus === OrderStatus.New || isAcceptedState) && !isPaid && (
-            <LinearGradient colors={['#F59E0B', '#D97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.amberGradient}>
-              <Text style={styles.amberGradientIcon}>⌛</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.amberGradientTitle}>Waiting for Customer Payment / COD</Text>
-                <Text style={styles.amberGradientDesc}>Pricing is saved and bill is sent to the customer. Once the customer pays or selects Cash on Delivery (COD), "Start Preparing Order" will activate.</Text>
+            <View style={styles.bannerInfo}>
+              <View style={[styles.bannerIconBox, { backgroundColor: '#EEF2FF' }]}>
+                <Text style={styles.bannerIcon}>⏳</Text>
               </View>
-            </LinearGradient>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.bannerTitle, { color: '#3730A3' }]}>Bill Sent • Waiting for Customer Payment</Text>
+                <Text style={[styles.bannerDesc, { color: '#4F46E5' }]}>
+                  The invoice has been sent to the customer. Once payment is completed or Cash on Delivery is chosen, preparation unlocks.
+                </Text>
+              </View>
+            </View>
           )}
 
-          {/* Delivery Partner Pickup & OTP Verification Card */}
+          {/* Searching for Delivery Partner Banner */}
+          {isSearchingPartner && (
+            <View style={styles.bannerSearching}>
+              <ActivityIndicator size="small" color="#B45309" style={{ marginRight: spacing.sm }} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.bannerSearchingTitle}>Finding Nearby Delivery Partner 🛵</Text>
+                <Text style={styles.bannerSearchingDesc}>
+                  Broadcasting request to nearby riders. You will be notified as soon as a rider accepts this order.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Delivery Partner OTP Verification Card (ONLY when partner is assigned & waiting for pickup) */}
           {showOtpCard && (
-            <BlurView intensity={50} tint="light" style={[styles.glassCard, styles.otpVerificationCard]}>
+            <View style={styles.otpCard}>
               <View style={styles.otpCardHeader}>
-                <View style={styles.otpIconBadge}>
-                  <Text style={styles.otpIconText}>🛵</Text>
+                <View style={styles.otpBadgeCircle}>
+                  <Text style={{ fontSize: 24 }}>🛵</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.otpCardTitle}>Delivery Partner Verification</Text>
-                  <Text style={styles.otpCardSubtitle}>
-                    {order?.deliveryPartnerName 
-                      ? `Assigned: ${order.deliveryPartnerName}` 
-                      : (isPartnerAssigned ? 'Delivery Boy Assigned • At Store' : 'Awaiting partner assignment')}
-                  </Text>
+                  <Text style={styles.otpCardTitle}>Delivery Partner Arrived</Text>
+                  <Text style={styles.otpCardSubtitle}>Verify pickup PIN before handing over medicines</Text>
                 </View>
-                <Badge label={isPartnerAssigned ? "ENTER OTP" : "SEARCHING"} status="warning" />
+                <View style={styles.otpRequiredTag}>
+                  <Text style={styles.otpRequiredTagText}>PIN REQUIRED</Text>
+                </View>
               </View>
 
-              <View style={styles.otpInstructionBox}>
-                <Text style={styles.otpInstructionText}>
-                  Ask the delivery boy for the <Text style={{ fontWeight: '800', color: colors.brand.primaryDark }}>4-digit Pickup OTP</Text> shown on his screen. Enter it below to verify and hand over the medicine parcel.
+              {/* Partner Details */}
+              <View style={styles.riderInfoBox}>
+                <View style={styles.riderRow}>
+                  <Text style={styles.riderName}>
+                    👤 {order.deliveryPartnerName || 'RapidMedico Partner'}
+                  </Text>
+                  {order.deliveryPartnerPhone ? (
+                    <Text style={styles.riderPhone}>📞 {order.deliveryPartnerPhone}</Text>
+                  ) : null}
+                </View>
+                {order.deliveryPartnerVehicle ? (
+                  <Text style={styles.riderVehicle}>🛵 Vehicle: {order.deliveryPartnerVehicle}</Text>
+                ) : null}
+              </View>
+
+              <View style={styles.otpPromptBox}>
+                <Text style={styles.otpPromptText}>
+                  Ask the rider for their <Text style={{ fontWeight: '800', color: colors.brand.primaryDark }}>4-digit Pickup PIN</Text> shown on their screen.
                 </Text>
               </View>
 
-              {order?.deliveryPartnerName ? (
-                <View style={styles.partnerInfoRow}>
-                  <Text style={styles.partnerInfoText}>
-                    👤 Assigned Partner: <Text style={{ fontWeight: '700' }}>{order.deliveryPartnerName}</Text>
-                    {order.deliveryPartnerPhone ? ` • 📞 ${order.deliveryPartnerPhone}` : ''}
-                    {order.deliveryPartnerVehicle ? ` • 🛵 ${order.deliveryPartnerVehicle}` : ''}
-                  </Text>
-                </View>
-              ) : null}
-
-              <View style={styles.otpInputSection}>
-                <Text style={styles.otpInputLabel}>ENTER 4-DIGIT PICKUP OTP</Text>
-                <View style={styles.otpInputRow}>
-                  <TextInput
-                    style={styles.otpInputField}
-                    placeholder="••••"
-                    placeholderTextColor="rgba(0,0,0,0.25)"
-                    keyboardType="number-pad"
-                    maxLength={4}
-                    value={otpInput}
-                    onChangeText={setOtpInput}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-                <Button
-                  title="VERIFY OTP & HAND OVER"
-                  variant="accept"
-                  size="large"
-                  loading={verifyOtpLoading}
-                  onPress={handleVerifyOtp}
-                  style={{ marginTop: spacing.md, width: '100%' }}
+              {/* 4-digit PIN Input */}
+              <View style={styles.otpInputContainer}>
+                <TextInput
+                  style={styles.otpInputField}
+                  placeholder="••••"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  value={otpInput}
+                  onChangeText={setOtpInput}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
-                {order?.storePickupOtp ? (
-                  <Text style={{ fontSize: 12, color: colors.text.secondary, marginTop: 8, textAlign: 'center' }}>
-                    (Pickup OTP in DB: <Text style={{ fontWeight: '700', color: colors.brand.primaryDark }}>{order.storePickupOtp}</Text>)
-                  </Text>
-                ) : null}
               </View>
-            </BlurView>
+
+              <TouchableOpacity
+                style={styles.verifyOtpBtn}
+                activeOpacity={0.85}
+                onPress={handleVerifyOtp}
+                disabled={verifyOtpLoading}
+              >
+                <LinearGradient
+                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.verifyOtpBtnGradient}
+                >
+                  {verifyOtpLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.verifyOtpBtnText}>VERIFY PIN & HAND OVER MEDICINE 🚀</Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Remove Dev PIN Badge as per user request */}
+            </View>
           )}
 
-          {/* Delivery Partner Assigned / Out of Delivery Card - ONLY after OTP verified! */}
+          {/* Out for Delivery Card (Handover Complete) */}
           {showOutOfDeliveryCard && (
-            <BlurView intensity={40} tint="light" style={[styles.glassCard, styles.partnerAssignedCard]}>
-              <View style={styles.assignedHeaderRow}>
-                <Text style={styles.assignedIcon}>🛵</Text>
+            <View style={styles.dispatchedCard}>
+              <View style={styles.dispatchedHeader}>
+                <Text style={{ fontSize: 26, marginRight: spacing.sm }}>✅</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.assignedTitle}>Out for Delivery</Text>
-                  <Text style={styles.assignedSubtitle}>OTP verified & parcel handed over</Text>
+                  <Text style={styles.dispatchedTitle}>Out for Delivery</Text>
+                  <Text style={styles.dispatchedSubtitle}>Parcel successfully handed over to delivery partner</Text>
                 </View>
-                <Badge label="OUT OF DELIVERY" status={OrderStatus.OutOfDelivery} />
+                <View style={styles.dispatchedPill}>
+                  <Text style={styles.dispatchedPillText}>DISPATCHED</Text>
+                </View>
               </View>
-
-              {order.deliveryPartnerName && (
-                <View style={styles.assignedPartnerDetails}>
-                  <Text style={styles.assignedPartnerText}>
-                    Partner: <Text style={{ fontWeight: '700', color: colors.text.primary }}>{order.deliveryPartnerName}</Text>
-                  </Text>
-                  {order.deliveryPartnerPhone ? (
-                    <Text style={styles.assignedPartnerText}>Phone: <Text style={{ color: colors.text.primary }}>{order.deliveryPartnerPhone}</Text></Text>
-                  ) : null}
-                  {order.deliveryPartnerVehicle ? (
-                    <Text style={styles.assignedPartnerText}>Vehicle: <Text style={{ color: colors.text.primary }}>{order.deliveryPartnerVehicle}</Text></Text>
-                  ) : null}
-                </View>
-              )}
-            </BlurView>
+              {order.deliveryPartnerName ? (
+                <Text style={styles.dispatchedRiderText}>
+                  🛵 Rider: <Text style={{ fontWeight: '700', color: '#151D19' }}>{order.deliveryPartnerName}</Text>
+                  {order.deliveryPartnerPhone ? ` • 📞 ${order.deliveryPartnerPhone}` : ''}
+                </Text>
+              ) : null}
+            </View>
           )}
 
-          {/* Customer Info */}
-          <BlurView intensity={50} tint="light" style={styles.glassCard}>
+          {/* Customer Information Card */}
+          <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardHeaderIcon}>👤</Text>
-              <Text style={styles.cardTitle}>Customer Information</Text>
-            </View>
-            <View style={styles.customerInfoGrid}>
-              <View style={styles.customerInfoBlock}>
-                <Text style={styles.labelSm}>NAME</Text>
-                <Text style={styles.bodyLg}>{order.customerFirstName}</Text>
+              <View style={styles.cardHeaderIconBox}>
+                <Text style={{ fontSize: 16 }}>👤</Text>
               </View>
-              <View style={styles.customerInfoBlock}>
-                <Text style={styles.labelSm}>CONTACT</Text>
-                <Text style={styles.bodyLg}>Hidden for privacy</Text>
+              <Text style={styles.cardTitle}>Customer Details</Text>
+              <View style={styles.privacyBadge}>
+                <Text style={styles.privacyBadgeText}>🔒 SECURED</Text>
               </View>
             </View>
-            {order.customerNotes && (
-              <View style={{ marginTop: spacing.sm }}>
-                <Text style={styles.labelSm}>NOTES</Text>
-                <Text style={styles.addressBox}>{order.customerNotes}</Text>
-              </View>
-            )}
-            <View style={{ marginTop: spacing.sm }}>
-              <Text style={styles.labelSm}>DELIVERY ADDRESS</Text>
-              <Text style={styles.addressBox}>Address hidden per privacy architecture. All delivery contacts route through RapidMedico.</Text>
-            </View>
-          </BlurView>
 
-          {/* Prescription Uploads */}
-          <BlurView intensity={50} tint="light" style={styles.glassCard}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardHeaderIcon}>📄</Text>
-              <Text style={styles.cardTitle}>Prescription Uploads</Text>
+            <View style={styles.customerGrid}>
+              <View style={styles.customerField}>
+                <Text style={styles.fieldLabel}>CUSTOMER NAME</Text>
+                <Text style={styles.fieldValue}>{order.customerFirstName || 'Customer'}</Text>
+              </View>
+              <View style={styles.customerField}>
+                <Text style={styles.fieldLabel}>PHONE PRIVACY</Text>
+                <Text style={styles.fieldValueMuted}>Routed via RapidMedico</Text>
+              </View>
             </View>
+
+            <View style={styles.addressContainer}>
+              <View style={styles.addressHeaderRow}>
+                <Text style={styles.fieldLabel}>DELIVERY ADDRESS</Text>
+              </View>
+              <View style={styles.addressBox}>
+                <Text style={styles.addressText}>
+                  Delivery address verified. Partner receives live GPS routing upon parcel dispatch.
+                </Text>
+              </View>
+            </View>
+
+            {order.customerNotes ? (
+              <View style={styles.notesContainer}>
+                <Text style={styles.fieldLabel}>CUSTOMER INSTRUCTIONS</Text>
+                <View style={styles.notesBox}>
+                  <Text style={{ fontSize: 14, marginRight: 6 }}>💬</Text>
+                  <Text style={styles.notesText}>{order.customerNotes}</Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Prescription Uploads Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderIconBox}>
+                <Text style={{ fontSize: 16 }}>📄</Text>
+              </View>
+              <Text style={styles.cardTitle}>Prescription Uploads</Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{order.prescriptionUrls?.length || 0}</Text>
+              </View>
+            </View>
+
             <View style={styles.prescriptionsGrid}>
               {order.prescriptionUrls && order.prescriptionUrls.length > 0 ? (
                 order.prescriptionUrls.map((url, idx) => (
-                  <TouchableOpacity key={idx} style={styles.prescriptionImgWrapper} onPress={() => setPrescriptionModalVisible(true)}>
-                    <Image source={{ uri: url }} style={styles.prescriptionImg} />
-                    <View style={styles.prescriptionImgOverlay}>
-                      <Text style={{ color: 'white', fontSize: 24 }}>🔍</Text>
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.prescriptionThumb}
+                    activeOpacity={0.8}
+                    onPress={() => setPrescriptionModalVisible(true)}
+                  >
+                    <Image source={{ uri: url }} style={styles.prescriptionImage} />
+                    <View style={styles.prescriptionZoomOverlay}>
+                      <Text style={{ color: 'white', fontSize: 18 }}>🔍 View</Text>
                     </View>
                   </TouchableOpacity>
                 ))
               ) : (
                 <View style={styles.noPrescriptionBox}>
-                  <Text style={styles.noPrescriptionText}>No prescriptions attached</Text>
+                  <Text style={styles.noPrescriptionText}>No digital prescription files attached</Text>
                 </View>
               )}
             </View>
-          </BlurView>
+          </View>
 
-          {/* Bill Editor */}
-          <BlurView intensity={50} tint="light" style={styles.glassCard}>
+          {/* Bill Editor & Items Table */}
+          <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardHeaderIcon}>🧾</Text>
-              <Text style={styles.cardTitle}>Bill Editor</Text>
-              <View style={{ marginLeft: 'auto' }}>
-                <Badge 
-                  label={!isPriceInputEditable ? "PRICING LOCKED" : "EDITING PRICES"} 
-                  status={!isPriceInputEditable ? "success" : "warning"} 
-                />
+              <View style={styles.cardHeaderIconBox}>
+                <Text style={{ fontSize: 16 }}>🧾</Text>
+              </View>
+              <Text style={styles.cardTitle}>Prescription & Billing</Text>
+              <View style={[
+                styles.billLockBadge,
+                !isPriceInputEditable ? styles.billLockBadgeLocked : styles.billLockBadgeEdit
+              ]}>
+                <Text style={[
+                  styles.billLockBadgeText,
+                  !isPriceInputEditable ? styles.billLockBadgeTextLocked : styles.billLockBadgeTextEdit
+                ]}>
+                  {!isPriceInputEditable ? '🔒 PRICING LOCKED' : '✏️ EDITING PRICES'}
+                </Text>
               </View>
             </View>
-            
-            <View style={styles.billItemsContainer}>
+
+            {/* Medicine Items */}
+            <View style={styles.itemsTable}>
               {editableItems.length > 0 ? (
-                <>
-                  {editableItems.map((item, idx) => (
-                    <View key={item.tempId} style={styles.billItemEdit}>
-                      <View style={styles.billItemEditHeader}>
-                        <TextInput
-                          style={[styles.inputEdit, { flex: 1, fontWeight: 'bold' }, !isPriceInputEditable && { backgroundColor: 'rgba(235,238,242,0.85)', color: colors.text.secondary }]}
-                          placeholder="Medicine Name"
-                          value={item.name}
-                          onChangeText={(val) => handleItemChange(item.tempId, 'name', val)}
-                          editable={false}
-                        />
+                editableItems.map((item, idx) => (
+                  <View key={item.tempId} style={styles.itemRowCard}>
+                    <View style={styles.itemRowHeader}>
+                      <View style={styles.itemIndexPill}>
+                        <Text style={styles.itemIndexText}>{idx + 1}</Text>
                       </View>
-                      <View style={styles.billItemEditRow}>
-                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                          <Text style={styles.labelSmNormal}>Qty:</Text>
+                      <Text style={styles.itemNameText}>{item.name || `Medicine #${idx + 1}`}</Text>
+                      {item.dosage ? (
+                        <Text style={styles.itemDosageText}>({item.dosage})</Text>
+                      ) : null}
+                    </View>
+
+                    <View style={styles.itemInputRow}>
+                      <View style={styles.qtyBadge}>
+                        <Text style={styles.qtyLabel}>Qty: </Text>
+                        <Text style={styles.qtyValue}>{item.quantity}</Text>
+                      </View>
+
+                      <View style={styles.priceInputWrapper}>
+                        <Text style={styles.currencyPrefix}>₹</Text>
+                        {isPriceInputEditable ? (
                           <TextInput
-                            style={[styles.inputEdit, { flex: 1, marginLeft: spacing.xs, backgroundColor: 'rgba(235,238,242,0.85)', color: colors.text.secondary }]}
-                            placeholder="1"
-                            keyboardType="numeric"
-                            value={item.quantity}
-                            editable={false}
-                          />
-                        </View>
-                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: spacing.sm }}>
-                          <Text style={styles.currencySymbolEdit}>₹</Text>
-                          <TextInput
-                            style={[
-                              styles.inputEdit, 
-                              { flex: 1 },
-                              !isPriceInputEditable && { 
-                                backgroundColor: 'rgba(235,238,242,0.85)', 
-                                color: colors.text.secondary,
-                                borderColor: 'rgba(0,0,0,0.1)'
-                              }
-                            ]}
+                            style={styles.priceInput}
                             placeholder="0.00"
-                            placeholderTextColor="rgba(0,0,0,0.3)"
+                            placeholderTextColor="#9CA3AF"
                             keyboardType="numeric"
                             value={item.price}
                             onChangeText={(val) => handleItemChange(item.tempId, 'price', val)}
-                            editable={isPriceInputEditable}
                           />
-                        </View>
+                        ) : (
+                          <Text style={styles.lockedPriceText}>{item.price || '0.00'}</Text>
+                        )}
                       </View>
                     </View>
-                  ))}
-                </>
-              ) : (
-                (order.items || []).map((item: StoreOrderItem, idx: number) => (
-                  <View key={idx} style={styles.billItemRead}>
-                    <View>
-                      <Text style={styles.billItemReadName}>{item.name}</Text>
-                      <Text style={styles.billItemReadQty}>Qty: {item.quantity} {item.dosage ? `(${item.dosage})` : ''}</Text>
-                    </View>
-                    <Text style={styles.billItemReadPrice}>₹{(item.price || 0).toFixed(2)}</Text>
                   </View>
                 ))
+              ) : (
+                <View style={styles.emptyItemsBox}>
+                  <Text style={styles.emptyItemsText}>No items specified in this order.</Text>
+                </View>
               )}
             </View>
 
-            <View style={styles.totalsContainer}>
+            {/* Invoice Breakdown */}
+            <View style={styles.invoiceTotals}>
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabelSub}>Subtotal</Text>
-                <Text style={styles.totalAmountSub}>₹{Math.max(0, (order.totalAmount || calculateTotal()) - 100).toFixed(2)}</Text>
+                <Text style={styles.totalRowLabel}>Medicines Subtotal</Text>
+                <Text style={styles.totalRowValue}>
+                  ₹{Math.max(0, (order.totalAmount || calculateTotal()) - 100).toFixed(2)}
+                </Text>
               </View>
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabelSub}>Delivery Fee</Text>
-                <Text style={styles.totalAmountSub}>₹100.00</Text>
+                <Text style={styles.totalRowLabel}>Delivery Fee</Text>
+                <Text style={styles.totalRowValue}>₹100.00</Text>
               </View>
-              <View style={[styles.totalRow, styles.grandTotalRow]}>
-                <Text style={styles.totalLabelGrand}>Total</Text>
-                <Text style={styles.totalAmountGrand}>₹{(order.totalAmount || calculateTotal()).toFixed(2)}</Text>
+              <View style={styles.totalDivider} />
+              <View style={styles.grandTotalRow}>
+                <View>
+                  <Text style={styles.grandTotalLabel}>Total Amount</Text>
+                  <Text style={styles.grandTotalSub}>Inclusive of all taxes</Text>
+                </View>
+                <Text style={styles.grandTotalValue}>
+                  ₹{(order.totalAmount || calculateTotal()).toFixed(2)}
+                </Text>
               </View>
             </View>
-          </BlurView>
-          
-          <View style={{ height: 100 }} />
+          </View>
+
+          {/* Generous bottom spacer so content is never hidden behind floating dock */}
+          <View style={{ height: 140 }} />
         </ScrollView>
 
-        {/* Fixed Bottom Actions */}
-        <BlurView intensity={90} tint="light" style={styles.footer}>
-          <View style={styles.footerContainer}>
-            {/* If bill is being edited or unpriced: Show Update Bill button */}
+        {/* Floating Action Dock (Footer) */}
+        <BlurView intensity={95} tint="light" style={styles.footerDock}>
+          <View style={styles.footerInner}>
+
+            {/* STATE 1: Unbilled or Editing Bill -> Reject & Update Bill */}
             {isPriceInputEditable && (
-              <>
+              <View style={styles.buttonRow}>
                 {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && (
-                  <TouchableOpacity style={styles.rejectBtn} onPress={() => setRejectSheetVisible(true)}>
-                    <Text style={styles.rejectBtnText}>Reject Order</Text>
+                  <TouchableOpacity
+                    style={styles.btnSecondaryReject}
+                    onPress={() => setRejectSheetVisible(true)}
+                  >
+                    <Text style={styles.btnSecondaryRejectText}>Reject</Text>
                   </TouchableOpacity>
                 )}
                 {isEditingBill && isAcceptedState && (
-                  <TouchableOpacity style={styles.rejectBtn} onPress={() => setIsEditingBill(false)}>
-                    <Text style={styles.rejectBtnText}>Cancel</Text>
+                  <TouchableOpacity
+                    style={styles.btnSecondaryCancel}
+                    onPress={() => setIsEditingBill(false)}
+                  >
+                    <Text style={styles.btnSecondaryCancelText}>Cancel</Text>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity 
-                  style={[styles.emeraldGradientBtn, { flex: 1 }]} 
+                <TouchableOpacity
+                  style={[styles.btnPrimaryGradient, { flex: 1 }]}
+                  activeOpacity={0.85}
                   onPress={handleUpdateBill}
                 >
-                  <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
-                    <Text style={styles.emeraldGradientBtnText}>Update Bill 🧾</Text>
+                  <LinearGradient
+                    colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientInner}
+                  >
+                    <Text style={styles.btnPrimaryText}>Update Bill 🧾</Text>
                   </LinearGradient>
                 </TouchableOpacity>
-              </>
+              </View>
             )}
 
-            {/* If bill is saved/locked and status is New or Accepted: Show Edit Bill + Start Preparing (disabled until payment done) */}
-            {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && (
-              <>
-                {!isPaid && (
-                  <TouchableOpacity 
-                    style={styles.updateBtn} 
-                    onPress={() => setIsEditingBill(true)}
-                  >
-                    <Text style={styles.updateBtnText}>✏️ Edit Bill</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity 
-                  style={[
-                    styles.emeraldGradientBtn, 
-                    { flex: 1 }, 
-                    !isPaid ? { opacity: 0.45, backgroundColor: '#9CA3AF' } : {}
-                  ]} 
-                  onPress={handlePrimaryAction}
-                  disabled={!isPaid}
+            {/* STATE 2: Bill Saved & Waiting for Payment / COD */}
+            {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && !isPaid && (
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.btnEditBill}
+                  onPress={() => setIsEditingBill(true)}
                 >
-                  <LinearGradient 
-                    colors={isPaid ? [colors.brand.primary, colors.brand.primaryDark] : ['#9CA3AF', '#6B7280']} 
-                    start={{ x: 0, y: 0 }} 
-                    end={{ x: 1, y: 1 }} 
-                    style={styles.emeraldGradientBtnInner}
-                  >
-                    <Text style={styles.emeraldGradientBtnText}>
-                      {isPaid ? 'Start Preparing Order 🚀' : 'Start Preparing (Waiting for Payment / COD) ⏳'}
-                    </Text>
-                  </LinearGradient>
+                  <Text style={styles.btnEditBillText}>✏️ Edit Bill</Text>
                 </TouchableOpacity>
-              </>
+                <View style={styles.btnDisabledWaiting}>
+                  <Text style={styles.btnDisabledWaitingText}>Waiting for Payment / COD ⏳</Text>
+                </View>
+              </View>
             )}
 
+            {/* STATE 3: Bill Saved & Paid / COD -> Start Preparing */}
+            {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && isPaid && (
+              <TouchableOpacity
+                style={styles.btnFullWidth}
+                activeOpacity={0.85}
+                onPress={handlePrimaryAction}
+              >
+                <LinearGradient
+                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientInner}
+                >
+                  <Text style={styles.btnPrimaryText}>Start Preparing Order 🚀</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+
+            {/* STATE 4: Preparing -> Mark as Packed & Ready */}
             {currentStatus === OrderStatus.Preparing && (
-              <TouchableOpacity style={styles.emeraldGradientBtn} onPress={handlePrimaryAction}>
-                <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
-                  <Text style={styles.emeraldGradientBtnText}>Mark as Packed & Ready 📦</Text>
+              <TouchableOpacity
+                style={styles.btnFullWidth}
+                activeOpacity={0.85}
+                onPress={handlePrimaryAction}
+                disabled={updateLoading}
+              >
+                <LinearGradient
+                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientInner}
+                >
+                  {updateLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.btnPrimaryText}>Mark as Packed & Ready 📦</Text>
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
             )}
 
+            {/* STATE 5: Packed & Ready -> Request Delivery Partner */}
             {currentStatus === OrderStatus.Ready && (
-              <TouchableOpacity style={styles.emeraldGradientBtn} onPress={handlePrimaryAction}>
-                <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
-                  <Text style={styles.emeraldGradientBtnText}>Request Delivery Partner 🛵</Text>
+              <TouchableOpacity
+                style={styles.btnFullWidth}
+                activeOpacity={0.85}
+                onPress={handlePrimaryAction}
+                disabled={deliveryLoading}
+              >
+                <LinearGradient
+                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientInner}
+                >
+                  {deliveryLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.btnPrimaryText}>Request Delivery Partner 🛵</Text>
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
             )}
-            
+
+            {/* STATE 6: Searching for Rider */}
+            {isSearchingPartner && (
+              <View style={styles.searchingFooterBox}>
+                <ActivityIndicator size="small" color="#B45309" style={{ marginRight: 8 }} />
+                <Text style={styles.searchingFooterText}>Searching for Nearby Delivery Partner...</Text>
+              </View>
+            )}
+
+            {/* STATE 7: Partner Assigned -> Prompts store to use OTP card above */}
             {showOtpCard && (
-              <View style={[styles.statusBoxFooter, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }]}>
-                <Text style={[styles.statusBoxText, { color: '#92400E', fontWeight: '800' }]}>
-                  {isPartnerAssigned 
-                    ? '🛵 Delivery Partner Assigned • Enter OTP Above to Hand Over' 
-                    : 'Awaiting Delivery Partner Assignment (Enter OTP above)'}
+              <View style={styles.riderAssignedFooterBox}>
+                <Text style={styles.riderAssignedFooterText}>
+                  🛵 Rider at Store • Enter Pickup PIN Above to Hand Over
                 </Text>
               </View>
             )}
 
+            {/* STATE 8: Dispatched */}
             {showOutOfDeliveryCard && (
-              <View style={styles.statusBoxFooter}>
-                <Text style={styles.statusBoxText}>✅ Out for Delivery (Handover Complete)</Text>
+              <View style={styles.dispatchedFooterBox}>
+                <Text style={styles.dispatchedFooterText}>✅ Parcel Handed Over & Dispatched</Text>
               </View>
             )}
+
           </View>
         </BlurView>
 
-        {/* Modals */}
+        {/* Prescription Viewer Modal */}
         <PrescriptionViewerModal
           visible={prescriptionModalVisible}
           urls={order.prescriptionUrls || []}
           onClose={() => setPrescriptionModalVisible(false)}
         />
 
+        {/* Reject Order Sheet */}
         <RejectOrderBottomSheet
           visible={rejectSheetVisible}
           orderId={orderId}
@@ -705,6 +934,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             navigation.goBack();
           }}
         />
+
       </SafeAreaView>
     </LinearGradient>
   );
@@ -713,345 +943,995 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  
+  centerContent: { justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+
+  // Header Styles
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.glass,
-    zIndex: 10,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+    zIndex: 20,
   },
   backButton: {
-    padding: spacing.xs,
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  backIcon: { fontSize: 24, color: colors.brand.primaryDark },
-  headerTitle: {
-    ...typography.h2,
-    color: colors.brand.primaryDark,
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerBadge: {
-    backgroundColor: 'rgba(255, 185, 95, 0.2)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 185, 95, 0.3)',
-  },
-  headerBadgeText: {
-    ...typography.caption,
-    color: '#ffb95f',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  
-  content: { padding: spacing.xl },
-  pageTitleContainer: { marginBottom: spacing.lg },
-  orderId: { ...typography.h1, color: colors.brand.primaryDark, fontWeight: '700' },
-  textGlow: {
-    textShadowColor: 'rgba(16, 185, 129, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  timestamp: { ...typography.body, color: colors.text.secondary, marginTop: 4 },
-  
-  amberGradient: {
-    borderRadius: 12,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: spacing.lg,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  amberGradientIcon: { fontSize: 24, marginRight: spacing.sm, marginTop: 2 },
-  amberGradientTitle: { ...typography.h3, color: '#fff', marginBottom: 4 },
-  amberGradientDesc: { ...typography.body, color: 'rgba(255, 255, 255, 0.9)' },
-  
-  glassCard: {
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border.glass,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    shadowColor: colors.brand.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 32,
-    overflow: 'hidden',
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
-  cardHeaderIcon: { fontSize: 20, marginRight: spacing.sm },
-  cardTitle: { ...typography.h3, color: colors.brand.primaryDark },
-  
-  customerInfoGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  customerInfoBlock: { width: '50%', marginBottom: spacing.sm },
-  labelSm: { ...typography.caption, color: colors.text.secondary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
-  bodyLg: { ...typography.bodyStrong, color: colors.text.primary, fontSize: 16 },
-  addressBox: {
-    ...typography.body,
+  backIcon: {
+    fontSize: 20,
+    fontWeight: '700',
     color: colors.text.primary,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    padding: spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border.glass,
-    overflow: 'hidden',
+    marginLeft: -1,
   },
-  
-  prescriptionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  prescriptionImgWrapper: {
-    width: 100,
-    height: 133,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border.glass,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  prescriptionImg: { width: '100%', height: '100%', resizeMode: 'cover' },
-  prescriptionImgOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+  headerTitleContainer: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    marginHorizontal: spacing.sm,
   },
-  noPrescriptionBox: {
-    width: '100%',
-    height: 100,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border.glass,
+  headerMainTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text.primary,
   },
-  noPrescriptionText: { ...typography.body, color: colors.text.secondary },
-  
-  billItemsContainer: { marginBottom: spacing.lg },
-  billItemEdit: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    padding: spacing.md,
-    borderRadius: 8,
+  headerSubId: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.brand.primary,
+    letterSpacing: 0.5,
+  },
+  headerStatusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border.glass,
+  },
+  headerStatusText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+
+  // Scroll Content
+  scrollContent: {
+    padding: spacing.lg,
+  },
+
+  // Hero Card
+  heroCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: spacing.lg,
     marginBottom: spacing.md,
-  },
-  billItemEditHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  deleteIconBtn: { padding: spacing.xs },
-  billItemEditRow: { flexDirection: 'row', alignItems: 'center' },
-  removeItemBtn: { padding: spacing.xs, marginLeft: spacing.sm, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 16, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  removeItemText: { color: colors.alert.urgent, fontSize: 16, fontWeight: 'bold' },
-  inputEdit: {
-    backgroundColor: 'rgba(255,255,255,0.8)',
     borderWidth: 1,
-    borderColor: colors.border.default,
-    borderRadius: 6,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 8,
-    ...typography.body,
+    borderColor: 'rgba(0, 106, 71, 0.1)',
+    shadowColor: colors.brand.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
   },
-  labelSmNormal: { ...typography.body, color: colors.text.secondary },
-  currencySymbolEdit: { ...typography.body, color: colors.text.secondary, marginRight: 4 },
-  
-  addItemBtn: {
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    borderStyle: 'dashed',
-    borderWidth: 2,
-    borderColor: 'rgba(16, 185, 129, 0.5)',
-    borderRadius: 8,
-    marginTop: spacing.xs,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  },
-  addItemText: { ...typography.caption, color: colors.brand.primaryDark, fontWeight: '700' },
-  
-  billItemRead: {
+  heroHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.glass,
+    alignItems: 'flex-start',
   },
-  billItemReadName: { ...typography.bodyStrong, color: colors.text.primary },
-  billItemReadQty: { ...typography.caption, color: colors.text.secondary },
-  billItemReadPrice: { ...typography.bodyStrong, color: colors.text.primary },
-  
-  totalsContainer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border.glass,
+  heroOrderNumber: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.brand.primaryDark,
+    letterSpacing: -0.5,
+  },
+  heroMetaText: {
+    fontSize: 13,
+    color: colors.text.secondary,
+    marginTop: 4,
+  },
+  orderTypeTag: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  orderTypeTagText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.brand.primaryDark,
+  },
+  paymentRow: {
+    marginTop: spacing.md,
+  },
+  paymentChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+  },
+  paymentChipPaid: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#86EFAC',
+  },
+  paymentChipPending: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  paymentChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  paymentChipTextPaid: {
+    color: '#166534',
+  },
+  paymentChipTextPending: {
+    color: '#92400E',
+  },
+
+  // 4-Step Stepper
+  stepperContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.xl,
     paddingTop: spacing.md,
-  },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs },
-  totalLabelSub: { ...typography.body, color: colors.text.secondary },
-  totalAmountSub: { ...typography.bodyStrong, color: colors.text.primary },
-  grandTotalRow: {
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border.glass,
+    borderTopColor: '#F3F4F6',
+    position: 'relative',
   },
-  totalLabelGrand: { ...typography.h3, color: colors.brand.primaryDark },
-  totalAmountGrand: { ...typography.h2, color: colors.brand.primaryDark, fontWeight: '700' },
-  
-  footer: {
+  stepperProgressLine: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.glass,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    paddingBottom: spacing.xl + 10,
+    top: spacing.md + 14,
+    left: 20,
+    right: 20,
+    height: 2,
+    backgroundColor: '#E5E7EB',
+    zIndex: 0,
   },
-  footerContainer: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md },
-  rejectBtn: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.alert.urgent,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    justifyContent: 'center',
+  stepItem: {
     alignItems: 'center',
+    zIndex: 1,
+    width: 65,
   },
-  rejectBtnText: { ...typography.caption, color: colors.alert.urgent, fontWeight: '700' },
-  updateBtn: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.brand.primary,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    justifyContent: 'center',
+  stepCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
-  updateBtnText: { ...typography.caption, color: colors.brand.primaryDark, fontWeight: '700' },
-  emeraldGradientBtn: { flex: 1, borderRadius: 12, overflow: 'hidden', shadowColor: colors.brand.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12 },
-  emeraldGradientBtnInner: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  emeraldGradientBtnText: { ...typography.caption, color: 'white', fontWeight: '700' },
-  
-  statusBoxFooter: { flex: 1, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 12, paddingVertical: spacing.md, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border.glass },
-  statusBoxText: { ...typography.bodyStrong, color: colors.brand.primaryDark },
-  
-  // OTP Verification Card Styles
-  otpVerificationCard: {
-    borderColor: colors.brand.primaryLight,
-    borderWidth: 1.5,
+  stepCircleDone: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  stepCircleActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#10B981',
+  },
+  stepCirclePending: {
+    backgroundColor: '#F9FAFB',
+    borderColor: '#D1D5DB',
+  },
+  stepCircleText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#9CA3AF',
+  },
+  stepCircleTextDone: {
+    color: '#FFFFFF',
+  },
+  stepCircleTextActive: {
+    color: '#059669',
+  },
+  stepLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  stepLabelActive: {
+    color: '#059669',
+    fontWeight: '800',
+  },
+  stepLabelDone: {
+    color: '#374151',
+    fontWeight: '700',
+  },
+
+  // Alert Banners
+  bannerWarning: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  bannerInfo: {
+    backgroundColor: '#EEF2FF',
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  bannerSearching: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  bannerIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  bannerIcon: { fontSize: 18 },
+  bannerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#92400E',
+    marginBottom: 2,
+  },
+  bannerDesc: {
+    fontSize: 13,
+    color: '#B45309',
+    lineHeight: 18,
+  },
+  bannerSearchingTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#92400E',
+    marginBottom: 2,
+  },
+  bannerSearchingDesc: {
+    fontSize: 12,
+    color: '#B45309',
+    lineHeight: 16,
+  },
+
+  // Delivery Partner OTP Card
+  otpCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 5,
   },
   otpCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  otpIconBadge: {
+  otpBadgeCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
-  otpIconText: { fontSize: 24 },
-  otpCardTitle: { ...typography.h3, color: colors.text.primary },
-  otpCardSubtitle: { ...typography.caption, color: colors.text.secondary },
-  otpInstructionBox: {
-    backgroundColor: 'rgba(255,255,255,0.4)',
+  otpCardTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: colors.text.primary,
+  },
+  otpCardSubtitle: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+  otpRequiredTag: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  otpRequiredTagText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#B45309',
+  },
+  riderInfoBox: {
+    backgroundColor: '#F8FAF9',
     borderRadius: 12,
     padding: spacing.md,
-    marginVertical: spacing.md,
-  },
-  otpInstructionText: {
-    ...typography.body,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.text.primary,
-  },
-  partnerInfoRow: {
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    padding: spacing.sm,
-    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8E4',
     marginBottom: spacing.md,
   },
-  partnerInfoText: {
-    ...typography.caption,
-    color: colors.text.primary,
-    fontSize: 13,
-  },
-  otpInputSection: {
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  otpInputLabel: {
-    ...typography.caption,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: colors.text.secondary,
-    marginBottom: spacing.sm,
-  },
-  otpInputRow: {
+  riderRow: {
     flexDirection: 'row',
-    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  riderName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  riderPhone: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.brand.primary,
+  },
+  riderVehicle: {
+    fontSize: 13,
+    color: colors.text.secondary,
+    marginTop: 4,
+  },
+  otpPromptBox: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 10,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  otpPromptText: {
+    fontSize: 13,
+    color: '#065F46',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  otpInputContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   otpInputField: {
     width: '100%',
-    height: 64,
+    height: 62,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: colors.brand.primaryLight,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderColor: '#10B981',
+    backgroundColor: '#FFFFFF',
     textAlign: 'center',
     fontSize: 32,
     fontWeight: '900',
     letterSpacing: 16,
     color: colors.brand.primaryDark,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  verifyOtpBtn: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: colors.brand.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  verifyOtpBtnGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verifyOtpBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  devPinBadge: {
+    marginTop: spacing.sm,
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  devPinText: {
+    fontSize: 12,
+    color: '#4B5563',
   },
 
-  // Partner Assigned Card Styles
-  partnerAssignedCard: {
-    borderColor: colors.brand.primaryLight,
+  // Out for Delivery Card
+  dispatchedCard: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1.5,
+    borderColor: '#86EFAC',
   },
-  assignedHeaderRow: {
+  dispatchedHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  assignedIcon: {
-    fontSize: 28,
-    marginRight: spacing.md,
+  dispatchedTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#166534',
   },
-  assignedTitle: {
-    ...typography.h3,
-    color: colors.brand.primaryDark,
-  },
-  assignedSubtitle: {
-    ...typography.caption,
-    color: colors.brand.primary,
+  dispatchedSubtitle: {
+    fontSize: 12,
+    color: '#15803D',
     marginTop: 2,
   },
-  assignedPartnerDetails: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
+  dispatchedPill: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  dispatchedPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#166534',
+  },
+  dispatchedRiderText: {
+    fontSize: 13,
+    color: '#374151',
+    marginTop: spacing.sm,
+    paddingTop: spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.4)',
+    borderTopColor: 'rgba(0,0,0,0.06)',
+  },
+
+  // Generic Card
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderRadius: 20,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  cardHeaderIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 106, 71, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.brand.primaryDark,
+    flex: 1,
+  },
+  privacyBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  privacyBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+  countBadge: {
+    backgroundColor: 'rgba(0, 106, 71, 0.1)',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.brand.primaryDark,
+  },
+
+  // Customer Info
+  customerGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  customerField: {
+    flex: 1,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.text.muted,
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  fieldValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  fieldValueMuted: {
+    fontSize: 14,
+    color: colors.text.secondary,
+  },
+  addressContainer: {
+    marginTop: spacing.xs,
+  },
+  addressHeaderRow: {
+    marginBottom: 4,
+  },
+  addressBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F8FAF9',
+    borderRadius: 12,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8E4',
+  },
+  addressText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text.primary,
+    lineHeight: 18,
+  },
+  notesContainer: {
+    marginTop: spacing.md,
+  },
+  notesBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF9C3',
+    borderRadius: 12,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#FEF08A',
+  },
+  notesText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#854D0E',
+    lineHeight: 18,
+  },
+
+  // Prescriptions Grid
+  prescriptionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
   },
-  assignedPartnerText: {
-    ...typography.caption,
+  prescriptionThumb: {
+    width: 100,
+    height: 120,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    position: 'relative',
+    backgroundColor: '#F3F4F6',
+  },
+  prescriptionImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  prescriptionZoomOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noPrescriptionBox: {
+    width: '100%',
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAF9',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#D1D5DB',
+  },
+  noPrescriptionText: {
+    fontSize: 13,
+    color: colors.text.muted,
+  },
+
+  // Bill Editor
+  billLockBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  billLockBadgeLocked: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+  },
+  billLockBadgeEdit: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  billLockBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  billLockBadgeTextLocked: {
+    color: '#065F46',
+  },
+  billLockBadgeTextEdit: {
+    color: '#92400E',
+  },
+
+  itemsTable: {
+    marginBottom: spacing.md,
+  },
+  itemRowCard: {
+    backgroundColor: '#F8FAF9',
+    borderRadius: 14,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E2E8E4',
+  },
+  itemRowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  itemIndexPill: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0, 106, 71, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  itemIndexText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.brand.primaryDark,
+  },
+  itemNameText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+    flex: 1,
+  },
+  itemDosageText: {
+    fontSize: 12,
+    color: colors.text.muted,
+    marginLeft: 4,
+  },
+  itemInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  qtyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  qtyLabel: {
+    fontSize: 13,
     color: colors.text.secondary,
+  },
+  qtyValue: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.text.primary,
+  },
+  priceInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+    paddingHorizontal: spacing.sm,
+    width: 140,
+    height: 42,
+  },
+  currencyPrefix: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+    marginRight: 4,
+  },
+  priceInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+    paddingVertical: 0,
+  },
+  lockedPriceText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  emptyItemsBox: {
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  emptyItemsText: {
+    fontSize: 13,
+    color: colors.text.muted,
+  },
+
+  // Totals Breakdown
+  invoiceTotals: {
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingTop: spacing.md,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  totalRowLabel: {
+    fontSize: 14,
+    color: colors.text.secondary,
+  },
+  totalRowValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  totalDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: spacing.sm,
+  },
+  grandTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  grandTotalLabel: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.brand.primaryDark,
+  },
+  grandTotalSub: {
+    fontSize: 11,
+    color: colors.text.muted,
+    marginTop: 1,
+  },
+  grandTotalValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: colors.brand.primaryDark,
+  },
+
+  // Floating Action Dock
+  footerDock: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.08)',
+    paddingHorizontal: spacing.lg,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  footerInner: {
+    width: '100%',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  btnSecondaryReject: {
+    width: 90,
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnSecondaryRejectText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#DC2626',
+  },
+  btnSecondaryCancel: {
+    width: 90,
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#6B7280',
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnSecondaryCancelText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4B5563',
+  },
+  btnPrimaryGradient: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    height: 50,
+    shadowColor: colors.brand.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  btnFullWidth: {
+    width: '100%',
+    height: 52,
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: colors.brand.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  gradientInner: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  btnPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+
+  // Edit Bill Button
+  btnEditBill: {
+    width: 115,
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.brand.primary,
+    backgroundColor: 'rgba(0, 106, 71, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnEditBillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.brand.primaryDark,
+  },
+
+  // Disabled Waiting Button
+  btnDisabledWaiting: {
+    flex: 1,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  btnDisabledWaitingText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+
+  // Footer Status States
+  searchingFooterBox: {
+    width: '100%',
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  searchingFooterText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+
+  riderAssignedFooterBox: {
+    width: '100%',
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  riderAssignedFooterText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#065F46',
+    textAlign: 'center',
+  },
+
+  dispatchedFooterBox: {
+    width: '100%',
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dispatchedFooterText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#166534',
   },
 });

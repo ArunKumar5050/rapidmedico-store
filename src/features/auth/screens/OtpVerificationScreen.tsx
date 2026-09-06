@@ -155,7 +155,7 @@ export const OtpVerificationScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[C.sageTop, C.sageBottom, C.secondaryFixed]} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={[C.sageTop, C.sageBottom, C.secondaryFixed]} style={StyleSheet.absoluteFill} />
       
       {/* Decorative Orbs */}
       <View style={[styles.orb, styles.orbTopRight]} />
@@ -193,7 +193,7 @@ export const OtpVerificationScreen = ({ route, navigation }: any) => {
                     {otp.map((digit, index) => (
                       <TextInput
                         key={`otp-${index}`}
-                        ref={(ref) => (inputsRef.current[index] = ref)}
+                        ref={(ref) => { inputsRef.current[index] = ref; }}
                         style={[
                           styles.otpInput,
                           focusedIndex === index && styles.otpInputFocused

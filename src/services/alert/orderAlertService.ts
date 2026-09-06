@@ -111,6 +111,8 @@ class OrderAlertService {
       console.warn('[OrderAlertService] KeepAwake failed:', e);
     }
 
+    if (!this.isAlerting) return;
+
     // 2. Play Sound (expo-audio)
     try {
       await setAudioModeAsync({
@@ -118,6 +120,8 @@ class OrderAlertService {
         shouldPlayInBackground: true,
         interruptionMode: 'duckOthers',
       });
+
+      if (!this.isAlerting) return;
 
       try {
         this.sound = createAudioPlayer(require('../../../assets/sounds/new_order_alert.mp3'));
@@ -158,7 +162,9 @@ class OrderAlertService {
     if (this.sound) {
       try {
         this.sound.pause();
-        this.sound.remove(); // Release memory
+        if (typeof this.sound.release === 'function') {
+          this.sound.release();
+        }
       } catch (e) {}
       this.sound = null;
     }

@@ -206,7 +206,7 @@ export const StoreRegistrationScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[C.sageTop, C.sageBottom, C.secondaryFixed]} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={[C.sageTop, C.sageBottom, C.secondaryFixed]} style={StyleSheet.absoluteFill} />
       
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">

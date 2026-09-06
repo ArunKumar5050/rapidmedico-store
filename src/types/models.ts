@@ -68,6 +68,8 @@ export interface StoreOrder {
   // STRICT PRIVACY ARCHITECTURE ENFORCED:
   // customerPhone, customerEmail, customerAddress, customerLat, customerLng, paymentMethod NEVER EXIST HERE.
   _collection?: 'orders' | 'customOrders';
+  storeStatus?: string;
+  _storeId?: string;
 }
 
 export interface InventoryItem {

@@ -73,7 +73,7 @@ export const ProfileScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       {/* Background */}
-      <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={styles.bgTop} />
         <View style={styles.bgBottom} />
       </View>

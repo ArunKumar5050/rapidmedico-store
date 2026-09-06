@@ -6,6 +6,7 @@ import { BlurView } from 'expo-blur';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors, typography, spacing, components } from '../../../theme/tokens';
 import { OrderStatus } from '../../../types/enums';
+import { StoreOrder } from '../../../types/models';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useOrderStore } from '../../../store/useOrderStore';
 
@@ -152,7 +153,7 @@ export const OrdersScreen = ({ navigation }: any) => {
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => {
               const timeStr = new Date(item.assignedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-              const medList = item.items?.map(i => i.name).filter(Boolean).join(', ') || 'Prescription Order';
+              const medList = item.items?.map((i: any) => i.name).filter(Boolean).join(', ') || 'Prescription Order';
               const badgeStyle = getStatusBadgeStyle(item);
               const isAwaitingOtp = item.status === OrderStatus.DeliveryPartnerAssigned || 
                                     (Boolean(item.deliveryPartnerId) && !item.storeOtpConfirmed && !item.storePickupOtpVerified);

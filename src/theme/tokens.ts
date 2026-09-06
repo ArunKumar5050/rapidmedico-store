@@ -3,6 +3,10 @@ export const colors = {
     primary: '#006a47', // emerald-deep equivalent
     primaryLight: '#82f9c0', // primary-fixed
     primaryDark: '#005236',
+    secondary: '#82f9c0',
+    emeraldLush: '#10B981',
+    emeraldDeep: '#006a47',
+    emeraldMid: '#059669',
   },
   action: {
     accept: '#10B981', // emerald-lush

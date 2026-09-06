@@ -19,7 +19,7 @@ export const MainNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: true }}>
       <Stack.Screen name="MainTabs" component={TabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} options={{ title: 'Order Details' }} />
+      <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AddMedicine" component={AddMedicineScreen} options={{ title: 'Add Medicine' }} />
       <Stack.Screen name="EditMedicine" component={EditMedicineScreen} options={{ title: 'Edit Stock' }} />
       <Stack.Screen name="StoreSettings" component={StoreSettingsScreen} options={{ title: 'Settings' }} />

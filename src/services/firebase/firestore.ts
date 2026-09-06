@@ -171,6 +171,18 @@ export class FirestoreService {
     if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
     if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
     
+    // Also extract images attached to individual items (e.g. custom items in cart)
+    if (data.items && Array.isArray(data.items)) {
+      data.items.forEach((item: any) => {
+        if (item.imageUrl) pUrls.push(item.imageUrl);
+        if (item.prescriptionUrl) pUrls.push(item.prescriptionUrl);
+        if (item.image) pUrls.push(item.image);
+      });
+    }
+    
+    // Filter out empties and dupes
+    pUrls = Array.from(new Set(pUrls.filter(u => typeof u === 'string' && u.trim() !== '')));
+    
     // Resolve payment status reliably across COD, Razorpay, or status flags
     const isCod = String(data.paymentMethod || '').toUpperCase() === 'COD' || String(data.paymentStatus || '').toUpperCase() === 'COD';
     const isCompletedPay = String(data.paymentStatus || '').toUpperCase() === 'COMPLETED' || String(data.status || '').toLowerCase() === 'paid';
@@ -389,10 +401,15 @@ export class FirestoreService {
 
   static async updateOrderStatus(orderId: string, status: OrderStatus | string, collectionName: string = 'customOrders'): Promise<void> {
     const docRef = doc(db, collectionName, orderId);
-    let customerAppStatus = 'confirmed';
-    if (status === OrderStatus.Completed) customerAppStatus = 'completed';
-    else if (status === OrderStatus.DeliveryPartnerAssigned || status === 'delivery boy assigned') customerAppStatus = 'delivery boy assigned';
     
+    let customerAppStatus = 'confirmed';
+    if (status === OrderStatus.Completed) customerAppStatus = 'delivered';
+    else if (status === OrderStatus.DeliveryPartnerAssigned || status === 'DELIVERY_PARTNER_ASSIGNED' || status === 'delivery boy assigned') customerAppStatus = 'out_for_delivery';
+    else if (status === OrderStatus.OutOfDelivery || status === 'OUT_OF_DELIVERY' || status === 'out_for_delivery') customerAppStatus = 'out_for_delivery';
+    else if (status === OrderStatus.Ready || status === 'READY' || status === OrderStatus.DeliveryRequested || status === 'DELIVERY_REQUESTED') customerAppStatus = 'ready_for_pickup';
+    else if (status === OrderStatus.Preparing || status === 'PREPARING') customerAppStatus = 'preparing';
+    else if (status === OrderStatus.Rejected || status === 'CANCELLED') customerAppStatus = 'cancelled';
+
     const updateData: any = {
       storeStatus: status,
       status: customerAppStatus,
@@ -414,7 +431,7 @@ export class FirestoreService {
       status === 'OUT_OF_DELIVERY' ||
       status === 'out_for_delivery'
     ) {
-      updateData.status = 'delivery boy assigned';
+      updateData.status = 'out_for_delivery';
       updateData.storeStatus = OrderStatus.OutOfDelivery;
       updateData.deliveryStatus = 'en_route_delivery';
       updateData.deliveryPartnerAssignedAt = new Date().toISOString();
@@ -424,7 +441,7 @@ export class FirestoreService {
       status === 'delivery boy assigned' ||
       status === 'delivery partner assigned'
     ) {
-      updateData.status = 'DELIVERY_ASSIGNED';
+      updateData.status = 'out_for_delivery';
       updateData.storeStatus = OrderStatus.DeliveryPartnerAssigned;
       updateData.deliveryStatus = 'en_route_pickup';
       updateData.deliveryPartnerAssignedAt = new Date().toISOString();
@@ -462,7 +479,7 @@ export class FirestoreService {
       const deliveryOtp = data.deliveryOtp || data.otp || Math.floor(1000 + Math.random() * 9000).toString();
       const nowIso = new Date().toISOString();
       const updatePayload: any = {
-        status: 'delivery boy assigned',
+        status: 'out_for_delivery',
         storeStatus: OrderStatus.OutOfDelivery,
         deliveryStatus: 'en_route_delivery',
         deliveryOtp: deliveryOtp,
