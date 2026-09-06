@@ -8,7 +8,7 @@ export const useUpdateOrderStatus = () => {
   const [loading, setLoading] = useState(false);
   const { isOnline } = useNetworkStatus();
 
-  const updateStatus = async (orderId: string, nextStatus: OrderStatus): Promise<boolean> => {
+  const updateStatus = async (orderId: string, nextStatus: OrderStatus, collectionName: string = 'customOrders'): Promise<boolean> => {
     if (!isOnline) {
       Alert.alert('Offline Error', 'Network connection required to update order status.');
       return false;
@@ -16,7 +16,7 @@ export const useUpdateOrderStatus = () => {
 
     setLoading(true);
     try {
-      await FirestoreService.updateOrderStatus(orderId, nextStatus);
+      await FirestoreService.updateOrderStatus(orderId, nextStatus, collectionName);
       setLoading(false);
       return true;
     } catch (error: any) {

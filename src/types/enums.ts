@@ -9,7 +9,8 @@ export enum OrderStatus {
   PickedUp = 'PICKED_UP',
   Completed = 'COMPLETED',
   Rejected = 'REJECTED',
-  TimedOut = 'TIMED_OUT'
+  TimedOut = 'TIMED_OUT',
+  PendingDoctorConfirmation = 'PENDING_DOCTOR_CONFIRMATION'
 }
 
 export enum KycStatus {

@@ -11,6 +11,7 @@ interface RejectOrderBottomSheetProps {
   orderId: string;
   onClose: () => void;
   onSuccess: () => void;
+  collectionName?: string;
 }
 
 export const RejectOrderBottomSheet: React.FC<RejectOrderBottomSheetProps> = ({
@@ -18,6 +19,7 @@ export const RejectOrderBottomSheet: React.FC<RejectOrderBottomSheetProps> = ({
   orderId,
   onClose,
   onSuccess,
+  collectionName = 'customOrders',
 }) => {
   const [selectedReason, setSelectedReason] = useState<RejectionReason | null>(null);
   const [otherNote, setOtherNote] = useState('');
@@ -36,7 +38,7 @@ export const RejectOrderBottomSheet: React.FC<RejectOrderBottomSheetProps> = ({
       return;
     }
 
-    const success = await rejectOrder(orderId, selectedReason, otherNote);
+    const success = await rejectOrder(orderId, selectedReason, otherNote, collectionName);
     if (success) {
       Alert.alert('Order Rejected', 'The order has been rejected and returned to the routing engine.');
       onSuccess();

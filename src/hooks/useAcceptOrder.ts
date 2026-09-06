@@ -9,7 +9,7 @@ export const useAcceptOrder = () => {
   const { isOnline } = useNetworkStatus();
   const { storeId } = useAuthStore();
 
-  const acceptOrder = async (orderId: string): Promise<boolean> => {
+  const acceptOrder = async (orderId: string, collectionName: string = 'customOrders'): Promise<boolean> => {
     if (!isOnline) {
       Alert.alert(
         'Offline Error',
@@ -23,7 +23,7 @@ export const useAcceptOrder = () => {
 
     setLoading(true);
     try {
-      await FirestoreService.acceptOrder(storeId, orderId);
+      await FirestoreService.acceptOrder(storeId, orderId, collectionName);
       setLoading(false);
       return true;
     } catch (error: any) {

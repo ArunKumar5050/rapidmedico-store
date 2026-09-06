@@ -23,6 +23,7 @@ export const RespondToOrderInputSchema = z.object({
   action: z.enum(['ACCEPT', 'REJECT']),
   items: z.array(z.any()).optional(),
   totalAmount: z.number().optional(),
+  collectionName: z.string().optional(),
   rejectionReason: z.nativeEnum(RejectionReason).optional(),
   rejectionNote: z.string().min(5, 'Rejection note must be at least 5 characters').optional(),
 }).refine(

@@ -73,15 +73,17 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     if (order && editableItems.length === 0) {
-      let initItems = (order.items || []).map((it: StoreOrderItem, idx: number) => ({
+      let initItems = (order.items || []).map((it: any, idx: number) => ({
         tempId: it.medicineId || `med-${Date.now()}-${idx}`,
         name: it.name && it.name !== 'Unknown Medicine' ? it.name : '',
-        quantity: it.quantity ? it.quantity.toString() : '1',
-        price: it.price ? it.price.toString() : '',
-        dosage: it.dosage,
+        quantity: (it.quantity !== undefined && it.quantity !== null) ? it.quantity.toString() : '1',
+        price: (it.price !== undefined && it.price !== null && it.price !== 0) ? it.price.toString() : '',
+        dosage: it.dosage || '',
       }));
 
-      if (initItems.length === 1 && initItems[0].name === '' && !initItems[0].price) {
+      if (initItems.length === 0) {
+        initItems = [{ tempId: `temp-${Date.now()}`, name: '', quantity: '1', price: '', dosage: '' }];
+      } else if (initItems.length === 1 && initItems[0].name === '' && !initItems[0].price) {
         initItems = [{ ...initItems[0], quantity: '1' }];
       }
 
@@ -144,7 +146,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         total += p * q;
       }
     });
-    return total + 40; // Delivery fee
+    return total + 100; // Delivery fee
   };
 
   const handleVerifyOtp = async () => {
@@ -155,7 +157,8 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
     setVerifyOtpLoading(true);
     try {
-      const res = await FirestoreService.verifyAndConfirmStorePickup(orderId, otpInput.trim());
+      const collectionName = order._collection || 'customOrders';
+      const res = await FirestoreService.verifyAndConfirmStorePickup(orderId, otpInput.trim(), collectionName);
       if (res.success) {
         setCurrentStatus(OrderStatus.OutOfDelivery);
         setOtpInput('');
@@ -174,7 +177,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   };
 
   const handlePrimaryAction = async () => {
-    if (needsPricing) {
+    if (isEditable) {
       let isValid = true;
       const updatedItems = editableItems.map(item => {
         const p = parseFloat(item.price);
@@ -200,29 +203,33 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
       }
 
       const totalAmount = calculateTotal();
+      const collectionName = order._collection || 'customOrders';
 
       try {
-        await FirestoreService.updateOrderBill(storeId, orderId, updatedItems, totalAmount);
-        const ok = await acceptOrder(orderId);
-        if (ok) {
-           setCurrentStatus(OrderStatus.Accepted);
+        await FirestoreService.updateOrderBill(storeId, orderId, updatedItems, totalAmount, collectionName);
+        
+        if (currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) {
+          const ok = await acceptOrder(orderId, collectionName);
+          if (ok) {
+             setCurrentStatus(OrderStatus.Accepted);
+          }
+        } else if (currentStatus === OrderStatus.Accepted) {
+          const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
+          if (!isPaid) {
+            Alert.alert('Payment Pending', 'Cannot start preparing until customer completes the payment or selects Cash on Delivery.');
+            return;
+          }
+          const ok = await updateStatus(orderId, OrderStatus.Preparing, order._collection || 'customOrders');
+          if (ok) setCurrentStatus(OrderStatus.Preparing);
         }
       } catch (e: any) {
-        Alert.alert('Error', e.message || 'Failed to update order bill.');
+        Alert.alert('Error', e.message || 'Failed to update order.');
       }
-    } else if (currentStatus === OrderStatus.Accepted) {
-      const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
-      if (!isPaid) {
-        Alert.alert('Payment Pending', 'Cannot start preparing until customer completes the payment or selects Cash on Delivery.');
-        return;
-      }
-      const ok = await updateStatus(orderId, OrderStatus.Preparing);
-      if (ok) setCurrentStatus(OrderStatus.Preparing);
     } else if (currentStatus === OrderStatus.Preparing) {
-      const ok = await updateStatus(orderId, OrderStatus.Ready);
+      const ok = await updateStatus(orderId, OrderStatus.Ready, order._collection || 'customOrders');
       if (ok) setCurrentStatus(OrderStatus.Ready);
     } else if (currentStatus === OrderStatus.Ready) {
-      const res = await requestPartner(orderId);
+      const res = await requestPartner(orderId, order._collection || 'customOrders');
       if (res.success) {
         setCurrentStatus(OrderStatus.DeliveryRequested);
         Alert.alert('Delivery Partner Requested', `Partner assigned. Estimated pickup ETA: ${res.etaMinutes || 8} mins.`);
@@ -231,8 +238,9 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   };
 
   const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
-  const needsPricing = currentStatus === OrderStatus.New || 
-                       (currentStatus === OrderStatus.Accepted && (!order.totalAmount || order.totalAmount === 0));
+  const isEditable = currentStatus === OrderStatus.New || 
+                     currentStatus === OrderStatus.PendingDoctorConfirmation ||
+                     currentStatus === OrderStatus.Accepted;
 
   return (
     <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={styles.container}>
@@ -257,7 +265,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             </View>
           </View>
 
-          {needsPricing && (
+          {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && (
             <LinearGradient colors={['#F59E0B', '#D97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.amberGradient}>
               <Text style={styles.amberGradientIcon}>⚠️</Text>
               <View style={{ flex: 1 }}>
@@ -421,30 +429,28 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             </View>
             
             <View style={styles.billItemsContainer}>
-              {needsPricing ? (
+              {isEditable ? (
                 <>
                   {editableItems.map((item, idx) => (
                     <View key={item.tempId} style={styles.billItemEdit}>
                       <View style={styles.billItemEditHeader}>
                         <TextInput
-                          style={[styles.inputEdit, { flex: 1 }]}
+                          style={[styles.inputEdit, { flex: 1, fontWeight: 'bold' }]}
                           placeholder="Medicine Name"
                           value={item.name}
                           onChangeText={(val) => handleItemChange(item.tempId, 'name', val)}
+                          editable={false}
                         />
-                        <TouchableOpacity onPress={() => handleRemoveItem(item.tempId)} style={styles.deleteIconBtn}>
-                          <Text style={{ fontSize: 18, color: colors.alert.urgent }}>🗑️</Text>
-                        </TouchableOpacity>
                       </View>
                       <View style={styles.billItemEditRow}>
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                           <Text style={styles.labelSmNormal}>Qty:</Text>
                           <TextInput
-                            style={[styles.inputEdit, { flex: 1, marginLeft: spacing.xs }]}
+                            style={[styles.inputEdit, { flex: 1, marginLeft: spacing.xs, backgroundColor: 'rgba(255,255,255,0.3)', color: colors.text.secondary }]}
                             placeholder="1"
                             keyboardType="numeric"
                             value={item.quantity}
-                            onChangeText={(val) => handleItemChange(item.tempId, 'quantity', val)}
+                            editable={false}
                           />
                         </View>
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: spacing.sm }}>
@@ -460,9 +466,6 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                       </View>
                     </View>
                   ))}
-                  <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem}>
-                    <Text style={styles.addItemText}>+ Add Item</Text>
-                  </TouchableOpacity>
                 </>
               ) : (
                 (order.items || []).map((item: StoreOrderItem, idx: number) => (
@@ -480,15 +483,15 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             <View style={styles.totalsContainer}>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabelSub}>Subtotal</Text>
-                <Text style={styles.totalAmountSub}>₹{needsPricing ? (calculateTotal() - 40).toFixed(2) : ((order.totalAmount || 0) - 40).toFixed(2)}</Text>
+                <Text style={styles.totalAmountSub}>₹{isEditable ? (calculateTotal() - 100).toFixed(2) : ((order.totalAmount || 0) - 100).toFixed(2)}</Text>
               </View>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabelSub}>Delivery Fee</Text>
-                <Text style={styles.totalAmountSub}>₹40.00</Text>
+                <Text style={styles.totalAmountSub}>₹100.00</Text>
               </View>
               <View style={[styles.totalRow, styles.grandTotalRow]}>
                 <Text style={styles.totalLabelGrand}>Total</Text>
-                <Text style={styles.totalAmountGrand}>₹{needsPricing ? calculateTotal().toFixed(2) : (order.totalAmount || 0).toFixed(2)}</Text>
+                <Text style={styles.totalAmountGrand}>₹{isEditable ? calculateTotal().toFixed(2) : (order.totalAmount || 0).toFixed(2)}</Text>
               </View>
             </View>
           </BlurView>
@@ -499,26 +502,22 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         {/* Fixed Bottom Actions */}
         <BlurView intensity={90} tint="light" style={styles.footer}>
           <View style={styles.footerContainer}>
-            {needsPricing && (
+            {isEditable && (
               <>
-                <TouchableOpacity style={styles.rejectBtn} onPress={() => setRejectSheetVisible(true)}>
-                  <Text style={styles.rejectBtnText}>Reject Order</Text>
-                </TouchableOpacity>
+                {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && (
+                  <TouchableOpacity style={styles.rejectBtn} onPress={() => setRejectSheetVisible(true)}>
+                    <Text style={styles.rejectBtnText}>Reject Order</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.emeraldGradientBtn} onPress={handlePrimaryAction}>
                   <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
-                    <Text style={styles.emeraldGradientBtnText}>Send Payment Link</Text>
-                    <Text style={{ fontSize: 16, color: 'white', marginLeft: 8 }}>🚀</Text>
+                    <Text style={styles.emeraldGradientBtnText}>
+                      {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) ? 'Send Payment Link' : 'Update Bill & Start Preparing'}
+                    </Text>
+                    {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && <Text style={{ fontSize: 16, color: 'white', marginLeft: 8 }}>🚀</Text>}
                   </LinearGradient>
                 </TouchableOpacity>
               </>
-            )}
-
-            {currentStatus === OrderStatus.Accepted && !needsPricing && (
-              <TouchableOpacity style={styles.emeraldGradientBtn} onPress={handlePrimaryAction}>
-                <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
-                  <Text style={styles.emeraldGradientBtnText}>Start Preparing</Text>
-                </LinearGradient>
-              </TouchableOpacity>
             )}
 
             {currentStatus === OrderStatus.Preparing && (
@@ -562,6 +561,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         <RejectOrderBottomSheet
           visible={rejectSheetVisible}
           orderId={orderId}
+          collectionName={order._collection}
           onClose={() => setRejectSheetVisible(false)}
           onSuccess={() => {
             setCurrentStatus(OrderStatus.Rejected);
@@ -713,6 +713,8 @@ const styles = StyleSheet.create({
   billItemEditHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   deleteIconBtn: { padding: spacing.xs },
   billItemEditRow: { flexDirection: 'row', alignItems: 'center' },
+  removeItemBtn: { padding: spacing.xs, marginLeft: spacing.sm, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 16, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  removeItemText: { color: colors.alert.urgent, fontSize: 16, fontWeight: 'bold' },
   inputEdit: {
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderWidth: 1,

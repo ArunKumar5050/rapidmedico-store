@@ -8,7 +8,7 @@ export const useRequestDeliveryPartner = () => {
   const [loading, setLoading] = useState(false);
   const { isOnline } = useNetworkStatus();
 
-  const requestPartner = async (orderId: string): Promise<{ success: boolean; etaMinutes?: number }> => {
+  const requestPartner = async (orderId: string, collectionName: string = 'customOrders'): Promise<{ success: boolean; etaMinutes?: number }> => {
     if (!isOnline) {
       Alert.alert('Offline Error', 'Network connection required to signal delivery partner request.');
       return { success: false };
@@ -16,7 +16,7 @@ export const useRequestDeliveryPartner = () => {
 
     setLoading(true);
     try {
-      await FirestoreService.updateOrderStatus(orderId, OrderStatus.DeliveryRequested);
+      await FirestoreService.updateOrderStatus(orderId, OrderStatus.DeliveryRequested, collectionName);
       setLoading(false);
       return { success: true, etaMinutes: 8 }; // Mocking ETA
     } catch (error: any) {

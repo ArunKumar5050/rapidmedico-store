@@ -47,8 +47,9 @@ export const RootNavigator = () => {
         visible={!!activeAlertOrder}
         order={activeAlertOrder}
         onAccept={async (orderId) => {
-          if (store?.storeId) {
-            await FirestoreService.acceptOrder(store.storeId, orderId);
+          if (store?.storeId && activeAlertOrder) {
+            const collectionName = activeAlertOrder._collection || 'customOrders';
+            await FirestoreService.acceptOrder(store.storeId, orderId, collectionName);
           }
           setActiveAlertOrder(null);
           addIgnoredAlertOrder(orderId);

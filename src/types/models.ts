@@ -64,6 +64,7 @@ export interface StoreOrder {
   deliveryPartnerAssignedAt?: string;
   // STRICT PRIVACY ARCHITECTURE ENFORCED:
   // customerPhone, customerEmail, customerAddress, customerLat, customerLng, paymentMethod NEVER EXIST HERE.
+  _collection?: 'orders' | 'customOrders';
 }
 
 export interface InventoryItem {

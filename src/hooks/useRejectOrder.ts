@@ -11,7 +11,8 @@ export const useRejectOrder = () => {
   const rejectOrder = async (
     orderId: string,
     rejectionReason: RejectionReason,
-    rejectionNote?: string
+    rejectionNote?: string,
+    collectionName: string = 'customOrders'
   ): Promise<boolean> => {
     if (!isOnline) {
       Alert.alert(
@@ -34,6 +35,7 @@ export const useRejectOrder = () => {
         action: 'REJECT',
         rejectionReason,
         rejectionNote,
+        collectionName,
       });
 
       setLoading(false);

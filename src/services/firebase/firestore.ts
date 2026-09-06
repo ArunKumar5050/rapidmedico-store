@@ -81,7 +81,7 @@ export class FirestoreService {
   }
 
   // HELPER: Map a Firestore document to StoreOrder
-  static mapDocToStoreOrder(id: string, data: any): StoreOrder & { _storeId?: string } {
+  static mapDocToStoreOrder(id: string, data: any, collectionName?: 'orders' | 'customOrders'): StoreOrder & { _storeId?: string, _collection?: string } {
     let mappedStatus = OrderStatus.New;
     const rawStatus = String(data.storeStatus || data.status || '').toUpperCase();
     
@@ -103,12 +103,28 @@ export class FirestoreService {
       mappedStatus = OrderStatus.Rejected;
     } else if (rawStatus === 'TIMED_OUT') {
       mappedStatus = OrderStatus.TimedOut;
+    } else if (rawStatus === 'PENDING_DOCTOR_CONFIRMATION') {
+      mappedStatus = OrderStatus.PendingDoctorConfirmation;
+    } else if (rawStatus === 'PENDING') {
+      mappedStatus = OrderStatus.New;
     } else if (data.storeStatus) {
       mappedStatus = data.storeStatus as OrderStatus;
+    } else if (data.status) {
+      // Fallback for any other status to prevent string mismatch
+      if (typeof data.status === 'string' && data.status.toUpperCase() === 'PENDING') {
+        mappedStatus = OrderStatus.New;
+      }
     }
 
     let orderItems = data.items;
-    if (!orderItems && data.medicines && Array.isArray(data.medicines)) {
+    if (orderItems && Array.isArray(orderItems)) {
+      orderItems = orderItems.map((item: any, index: number) => ({
+        ...item,
+        medicineId: item.medicineId || item.id || `med-${index}`,
+        quantity: item.quantity !== undefined ? item.quantity : (item.qty || 1),
+        price: item.price !== undefined ? item.price : (item.unitPrice || 0)
+      }));
+    } else if (!orderItems && data.medicines && Array.isArray(data.medicines)) {
       orderItems = data.medicines.map((med: string, index: number) => ({
         medicineId: `med-${index}`,
         name: med,
@@ -116,7 +132,7 @@ export class FirestoreService {
         price: data.price || 0
       }));
     } else if (!orderItems) {
-      orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price }];
+      orderItems = [{ medicineId: 'med-1', name: data.medicineName || 'Unknown Medicine', quantity: 1, price: data.price || 0 }];
     }
 
     const assignedAtIso = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.assignedAt || data.createdAt || new Date().toISOString());
@@ -152,7 +168,8 @@ export class FirestoreService {
       deliveryPartnerPhone: data.deliveryPartnerPhone,
       deliveryPartnerVehicle: data.deliveryPartnerVehicle,
       deliveryPartnerAssignedAt: data.deliveryPartnerAssignedAt,
-      _storeId: data.storeId
+      _storeId: data.storeId,
+      _collection: collectionName
     };
   }
 
@@ -161,13 +178,13 @@ export class FirestoreService {
     const docRef = doc(db, 'customOrders', orderId);
     return onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        onUpdate(FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data()));
+        onUpdate(FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'customOrders'));
       } else {
         // Check backup 'orders' collection if not in customOrders
         const altRef = doc(db, 'orders', orderId);
         getDoc(altRef).then((altSnap) => {
           if (altSnap.exists()) {
-            onUpdate(FirestoreService.mapDocToStoreOrder(altSnap.id, altSnap.data()));
+            onUpdate(FirestoreService.mapDocToStoreOrder(altSnap.id, altSnap.data(), 'orders'));
           } else {
             onUpdate(null);
           }
@@ -177,7 +194,7 @@ export class FirestoreService {
       console.warn('[FirestoreService] subscribeOrder error:', error);
       getDoc(docRef).then((snap) => {
         if (snap.exists()) {
-          onUpdate(FirestoreService.mapDocToStoreOrder(snap.id, snap.data()));
+          onUpdate(FirestoreService.mapDocToStoreOrder(snap.id, snap.data(), 'customOrders'));
         } else {
           onUpdate(null);
         }
@@ -187,61 +204,100 @@ export class FirestoreService {
 
   // ORDERS (STORE PRIVACY Projection `storeOrders/{storeId}/orders`)
   static subscribeActiveOrders(storeId: string, onUpdate: (orders: StoreOrder[]) => void) {
-    const ordersCol = collection(db, 'customOrders');
-    // For direct integration, fetch all orders that are either unassigned (processing) or assigned to this store.
-    const q = query(ordersCol, limit(100)); // Simpler query, filter on client to avoid index issues
-    return onSnapshot(q, (snapshot) => {
-      let orders = snapshot.docs
-        .map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data()))
-        .filter(o => 
-          // Show orders that are unassigned (New), assigned to this store, or show all if storeId not set yet
-          !storeId || (o.status === OrderStatus.New && !o._storeId) || o._storeId === storeId || !o._storeId
-        )
-        .filter(o => [
-          OrderStatus.New,
-          OrderStatus.Accepted,
-          OrderStatus.Preparing,
-          OrderStatus.Ready,
-          OrderStatus.DeliveryRequested,
-          OrderStatus.DeliveryPartnerAssigned,
-          OrderStatus.OutOfDelivery,
-          OrderStatus.PickedUp
-        ].includes(o.status));
+    const customOrdersCol = collection(db, 'customOrders');
+    const ordersCol = collection(db, 'orders');
+    
+    const qCustom = query(customOrdersCol, limit(100));
+    const qOrders = query(ordersCol, limit(100));
+    
+    let customOrdersList: StoreOrder[] = [];
+    let ordersList: StoreOrder[] = [];
+    
+    const emitUpdate = () => {
+      let combined = [...customOrdersList, ...ordersList];
+      
+      combined = combined.filter(o => 
+        !storeId || (o.status === OrderStatus.New && !o._storeId) || o._storeId === storeId || !o._storeId
+      ).filter(o => [
+        OrderStatus.New, OrderStatus.Accepted, OrderStatus.Preparing, OrderStatus.Ready,
+        OrderStatus.DeliveryRequested, OrderStatus.DeliveryPartnerAssigned,
+        OrderStatus.OutOfDelivery, OrderStatus.PickedUp
+      ].includes(o.status));
 
-      // Client-side sort to avoid missing Firestore Index errors
-      orders = orders.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
-      onUpdate(orders);
+      combined = combined.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
+      onUpdate(combined);
+    };
+
+    const unsubCustom = onSnapshot(qCustom, (snapshot) => {
+      customOrdersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'customOrders'));
+      emitUpdate();
     });
+
+    const unsubOrders = onSnapshot(qOrders, (snapshot) => {
+      ordersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'orders'));
+      emitUpdate();
+    });
+
+    return () => {
+      unsubCustom();
+      unsubOrders();
+    };
   }
 
   static subscribeOrderHistory(storeId: string, onUpdate: (orders: StoreOrder[]) => void) {
-    const ordersCol = collection(db, 'customOrders');
-    const q = storeId 
+    const customOrdersCol = collection(db, 'customOrders');
+    const ordersCol = collection(db, 'orders');
+
+    const qCustom = storeId 
+      ? query(customOrdersCol, where('storeId', '==', storeId), limit(50))
+      : query(customOrdersCol, limit(50));
+      
+    const qOrders = storeId 
       ? query(ordersCol, where('storeId', '==', storeId), limit(50))
       : query(ordersCol, limit(50));
       
-    return onSnapshot(q, (snapshot) => {
-      let orders = snapshot.docs
-        .map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data()))
-        .filter(o => [OrderStatus.Completed, OrderStatus.Rejected, OrderStatus.TimedOut].includes(o.status));
+    let customOrdersList: StoreOrder[] = [];
+    let ordersList: StoreOrder[] = [];
 
-      orders = orders.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
-      onUpdate(orders);
+    const emitUpdate = () => {
+      let combined = [...customOrdersList, ...ordersList];
+      
+      combined = combined.filter(o => [OrderStatus.Completed, OrderStatus.Rejected, OrderStatus.TimedOut].includes(o.status));
+      combined = combined.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
+      
+      onUpdate(combined);
+    };
+
+    const unsubCustom = onSnapshot(qCustom, (snapshot) => {
+      customOrdersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'customOrders'));
+      emitUpdate();
     });
+
+    const unsubOrders = onSnapshot(qOrders, (snapshot) => {
+      ordersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'orders'));
+      emitUpdate();
+    });
+
+    return () => {
+      unsubCustom();
+      unsubOrders();
+    };
   }
 
-  static async updateOrderBill(storeId: string, orderId: string, items: any[], totalAmount: number): Promise<void> {
-    const docRef = doc(db, 'customOrders', orderId);
+  static async updateOrderBill(storeId: string, orderId: string, items: any[], totalAmount: number, collectionName: string = 'customOrders'): Promise<void> {
+    const docRef = doc(db, collectionName, orderId);
     
     const itemizedBill = items.map(item => ({
       medicine: item.name,
+      qty: item.quantity || 1,
+      unitPrice: item.price,
       price: item.price * (item.quantity || 1)
     }));
 
     await updateDoc(docRef, {
       items,
       itemizedBill,
-      deliveryCharge: 200,
+      deliveryCharge: 100,
       billAmount: totalAmount,
       storeId, // Lock the order to this store
       billGeneratedAt: new Date().toISOString(),
@@ -249,8 +305,8 @@ export class FirestoreService {
     });
   }
 
-  static async acceptOrder(storeId: string, orderId: string): Promise<void> {
-    const docRef = doc(db, 'customOrders', orderId);
+  static async acceptOrder(storeId: string, orderId: string, collectionName: string = 'customOrders'): Promise<void> {
+    const docRef = doc(db, collectionName, orderId);
     await updateDoc(docRef, {
       status: 'confirmed',
       storeStatus: OrderStatus.Accepted,
@@ -259,8 +315,8 @@ export class FirestoreService {
     });
   }
 
-  static async updateOrderStatus(orderId: string, status: OrderStatus | string): Promise<void> {
-    const docRef = doc(db, 'customOrders', orderId);
+  static async updateOrderStatus(orderId: string, status: OrderStatus | string, collectionName: string = 'customOrders'): Promise<void> {
+    const docRef = doc(db, collectionName, orderId);
     let customerAppStatus = 'confirmed';
     if (status === OrderStatus.Completed) customerAppStatus = 'completed';
     else if (status === OrderStatus.DeliveryPartnerAssigned || status === 'delivery boy assigned') customerAppStatus = 'delivery boy assigned';
@@ -309,9 +365,9 @@ export class FirestoreService {
    * Verify store pickup OTP entered by the store owner with the "storePickupOtp" in database
    * and transition order status to 'delivery boy assigned' with storeStatus 'OUT_OF_DELIVERY'
    */
-  static async verifyAndConfirmStorePickup(orderId: string, enteredOtp: string): Promise<{ success: boolean; error?: string }> {
+  static async verifyAndConfirmStorePickup(orderId: string, enteredOtp: string, collectionName: string = 'customOrders'): Promise<{ success: boolean; error?: string }> {
     try {
-      const docRef = doc(db, 'customOrders', orderId);
+      const docRef = doc(db, collectionName, orderId);
       const snap = await getDoc(docRef);
       if (!snap.exists()) {
         return { success: false, error: 'Order not found in database.' };
