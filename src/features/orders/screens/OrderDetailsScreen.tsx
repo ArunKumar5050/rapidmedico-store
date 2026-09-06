@@ -213,9 +213,9 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
           if (ok) {
              setCurrentStatus(OrderStatus.Accepted);
           }
-        } else if (currentStatus === OrderStatus.Accepted) {
+        } else if (currentStatus === OrderStatus.Accepted || currentStatus === 'paid' || currentStatus === 'PAID' || currentStatus === 'completed' || currentStatus === 'COMPLETED') {
           const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
-          if (!isPaid) {
+          if (!isPaid && currentStatus !== 'paid' && currentStatus !== 'completed') {
             Alert.alert('Payment Pending', 'Cannot start preparing until customer completes the payment or selects Cash on Delivery.');
             return;
           }
@@ -238,9 +238,10 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   };
 
   const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
+  const isAcceptedState = currentStatus === OrderStatus.Accepted || currentStatus === 'paid' || currentStatus === 'PAID' || currentStatus === 'completed' || currentStatus === 'COMPLETED';
   const isEditable = currentStatus === OrderStatus.New || 
                      currentStatus === OrderStatus.PendingDoctorConfirmation ||
-                     currentStatus === OrderStatus.Accepted;
+                     isAcceptedState;
 
   return (
     <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={styles.container}>
@@ -509,10 +510,16 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                     <Text style={styles.rejectBtnText}>Reject Order</Text>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity style={styles.emeraldGradientBtn} onPress={handlePrimaryAction}>
+                <TouchableOpacity 
+                  style={[styles.emeraldGradientBtn, isAcceptedState && !isPaid ? { opacity: 0.5 } : {}]} 
+                  onPress={handlePrimaryAction}
+                  disabled={isAcceptedState && !isPaid}
+                >
                   <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
                     <Text style={styles.emeraldGradientBtnText}>
-                      {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) ? 'Send Payment Link' : 'Update Bill & Start Preparing'}
+                      {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) 
+                        ? 'Send Payment Link' 
+                        : (isPaid ? 'Start Preparing' : 'Waiting for Payment')}
                     </Text>
                     {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && <Text style={{ fontSize: 16, color: 'white', marginLeft: 8 }}>🚀</Text>}
                   </LinearGradient>
