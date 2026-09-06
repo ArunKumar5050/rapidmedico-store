@@ -24,7 +24,7 @@ export const DocumentUploadTile: React.FC<DocumentUploadTileProps> = ({
   const pickImageFromGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Required', 'RapidMedicoco needs gallery access to attach an existing photo.');
+      Alert.alert('Permission Required', 'RapidMedico needs gallery access to attach an existing photo.');
       return;
     }
 
@@ -42,7 +42,7 @@ export const DocumentUploadTile: React.FC<DocumentUploadTileProps> = ({
   const takePhotoWithCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Required', 'RapidMedicoco needs camera access to capture your documents and photos.');
+      Alert.alert('Permission Required', 'RapidMedico needs camera access to capture your documents and photos.');
       return;
     }
 

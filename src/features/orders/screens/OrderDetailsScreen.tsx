@@ -517,7 +517,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
               <View style={styles.riderInfoBox}>
                 <View style={styles.riderRow}>
                   <Text style={styles.riderName}>
-                    👤 {order.deliveryPartnerName || 'RapidMedicoco Partner'}
+                    👤 {order.deliveryPartnerName || 'RapidMedico Partner'}
                   </Text>
                   {order.deliveryPartnerPhone ? (
                     <Text style={styles.riderPhone}>📞 {order.deliveryPartnerPhone}</Text>
@@ -614,7 +614,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
               </View>
               <View style={styles.customerField}>
                 <Text style={styles.fieldLabel}>PHONE PRIVACY</Text>
-                <Text style={styles.fieldValueMuted}>Routed via RapidMedicoco</Text>
+                <Text style={styles.fieldValueMuted}>Routed via RapidMedico</Text>
               </View>
             </View>
 

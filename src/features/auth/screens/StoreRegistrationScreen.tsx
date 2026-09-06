@@ -216,7 +216,7 @@ export const StoreRegistrationScreen = ({ navigation }: any) => {
             <View style={styles.topHeader}>
               <View style={styles.logoContainer}>
                 <MaterialIcons name="local-pharmacy" size={32} color={C.emeraldDeep} />
-                <Text style={styles.logoText}>RapidMedicoco</Text>
+                <Text style={styles.logoText}>RapidMedico</Text>
               </View>
               <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelButton}>
                 <MaterialIcons name="close" size={18} color={C.emeraldLush} />
@@ -260,7 +260,7 @@ export const StoreRegistrationScreen = ({ navigation }: any) => {
                 <View style={styles.formHeader}>
                   <Text style={styles.title}>Basic Information</Text>
                   <Text style={styles.subtitle}>
-                    Let's start with your store's essential details to get you registered on RapidMedicoco.
+                    Let's start with your store's essential details to get you registered on RapidMedico.
                   </Text>
                 </View>
 

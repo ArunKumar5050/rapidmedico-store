@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "RapidMedicoco Store",
-    "slug": "rapidmedicoco-store",
+    "name": "RapidMedico Store",
+    "slug": "rapidmedico-store",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
-    "scheme": "rapidmedicoco-store",
+    "scheme": "rapidmedico-store",
     "updates": {
       "enabled": false
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.rapidmedicoco.store",
+      "bundleIdentifier": "com.rapidmedico.store",
       "infoPlist": {
-        "NSCameraUsageDescription": "RapidMedicoco needs camera access to capture your documents and medicine photos.",
-        "NSPhotoLibraryUsageDescription": "RapidMedicoco needs gallery access to attach an existing photo."
+        "NSCameraUsageDescription": "RapidMedico needs camera access to capture your documents and medicine photos.",
+        "NSPhotoLibraryUsageDescription": "RapidMedico needs gallery access to attach an existing photo."
       }
     },
     "android": {
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#0F9D6C"
       },
-      "package": "com.rapidmedicoco.store",
+      "package": "com.rapidmedico.store",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.CAMERA",
@@ -54,15 +54,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "RapidMedicoco needs gallery access to attach an existing photo.",
-          "cameraPermission": "RapidMedicoco needs camera access to capture your documents and medicine photos."
+          "photosPermission": "RapidMedico needs gallery access to attach an existing photo.",
+          "cameraPermission": "RapidMedico needs camera access to capture your documents and medicine photos."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "RapidMedicoco needs your location to set your store coordinates.",
-          "locationWhenInUsePermission": "RapidMedicoco needs your location to set your store coordinates."
+          "locationAlwaysAndWhenInUsePermission": "RapidMedico needs your location to set your store coordinates.",
+          "locationWhenInUsePermission": "RapidMedico needs your location to set your store coordinates."
         }
       ],
       "expo-audio",
