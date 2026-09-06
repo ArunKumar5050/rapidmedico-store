@@ -85,9 +85,37 @@ export class FirestoreService {
     let mappedStatus = OrderStatus.New;
     const rawStatus = String(data.storeStatus || data.status || '').toUpperCase();
     
-    if (rawStatus === 'OUT_OF_DELIVERY' || rawStatus === 'OUT_FOR_DELIVERY' || data.status === 'out_for_delivery' || data.status === 'out_of_delivery') {
+    // Store pickup OTP is confirmed ONLY when explicitly verified or en_route_delivery
+    const isPickupConfirmed = Boolean(
+      data.storeOtpConfirmed === true || 
+      data.storePickupOtpVerified === true ||
+      data.deliveryStatus === 'en_route_delivery' ||
+      data.deliveryStatus === 'delivered'
+    );
+
+    if (rawStatus === 'DELIVERED' || data.status === 'delivered' || rawStatus === 'COMPLETED' || data.status === 'completed') {
+      mappedStatus = OrderStatus.Completed;
+    } else if (rawStatus === 'REJECTED' || rawStatus === 'CANCELLED' || data.status === 'cancelled') {
+      mappedStatus = OrderStatus.Rejected;
+    } else if (rawStatus === 'TIMED_OUT') {
+      mappedStatus = OrderStatus.TimedOut;
+    } else if (isPickupConfirmed) {
       mappedStatus = OrderStatus.OutOfDelivery;
-    } else if (rawStatus === 'DELIVERY_PARTNER_ASSIGNED' || data.status === 'delivery boy assigned' || data.status === 'delivery partner assigned') {
+    } else if (
+      rawStatus === 'DELIVERY_PARTNER_ASSIGNED' || 
+      rawStatus === 'DELIVERY_ASSIGNED' || 
+      data.status === 'DELIVERY_ASSIGNED' || 
+      data.status === 'delivery boy assigned' || 
+      data.status === 'delivery partner assigned' ||
+      data.deliveryStatus === 'en_route_pickup' ||
+      Boolean(data.deliveryPartnerId) ||
+      rawStatus === 'OUT_OF_DELIVERY' ||
+      rawStatus === 'OUT_FOR_DELIVERY' ||
+      data.status === 'out_for_delivery' ||
+      data.status === 'out_of_delivery'
+    ) {
+      // If delivery partner is assigned or requested but pickup OTP is NOT confirmed yet,
+      // it MUST remain in DeliveryPartnerAssigned state so the store can verify the OTP!
       mappedStatus = OrderStatus.DeliveryPartnerAssigned;
     } else if (rawStatus === 'DELIVERY_REQUESTED' || data.status === 'DELIVERY_REQUESTED') {
       mappedStatus = OrderStatus.DeliveryRequested;
@@ -97,12 +125,9 @@ export class FirestoreService {
       mappedStatus = OrderStatus.Preparing;
     } else if (rawStatus === 'ACCEPTED' || rawStatus === 'CONFIRMED' || data.status === 'confirmed') {
       mappedStatus = OrderStatus.Accepted;
-    } else if (rawStatus === 'COMPLETED' || rawStatus === 'PAID' || rawStatus === 'DELIVERED' || data.status === 'paid' || data.status === 'completed' || data.status === 'delivered') {
-      mappedStatus = OrderStatus.Completed;
-    } else if (rawStatus === 'REJECTED' || rawStatus === 'CANCELLED' || data.status === 'cancelled') {
-      mappedStatus = OrderStatus.Rejected;
-    } else if (rawStatus === 'TIMED_OUT') {
-      mappedStatus = OrderStatus.TimedOut;
+    } else if (rawStatus === 'PAID' || data.status === 'paid') {
+      // Payment received (COD or Online) - Order is accepted and ready for pharmacy preparation!
+      mappedStatus = (data.storeStatus && data.storeStatus !== OrderStatus.New) ? (data.storeStatus as OrderStatus) : OrderStatus.Accepted;
     } else if (rawStatus === 'PENDING_DOCTOR_CONFIRMATION') {
       mappedStatus = OrderStatus.PendingDoctorConfirmation;
     } else if (rawStatus === 'PENDING') {
@@ -110,7 +135,6 @@ export class FirestoreService {
     } else if (data.storeStatus) {
       mappedStatus = data.storeStatus as OrderStatus;
     } else if (data.status) {
-      // Fallback for any other status to prevent string mismatch
       if (typeof data.status === 'string' && data.status.toUpperCase() === 'PENDING') {
         mappedStatus = OrderStatus.New;
       }
@@ -147,6 +171,11 @@ export class FirestoreService {
     if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
     if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
     
+    // Resolve payment status reliably across COD, Razorpay, or status flags
+    const isCod = String(data.paymentMethod || '').toUpperCase() === 'COD' || String(data.paymentStatus || '').toUpperCase() === 'COD';
+    const isCompletedPay = String(data.paymentStatus || '').toUpperCase() === 'COMPLETED' || String(data.status || '').toLowerCase() === 'paid';
+    const resolvedPaymentStatus = isCod ? 'COD' : (isCompletedPay ? 'COMPLETED' : (data.paymentStatus || 'PENDING'));
+
     return {
       id,
       customerFirstName: data.userName || data.customerName || 'Customer',
@@ -156,9 +185,14 @@ export class FirestoreService {
       totalAmount: data.billAmount || data.price || data.totalAmount,
       assignedAt: assignedAtIso,
       respondByAt: respondByAtIso,
-      paymentStatus: data.paymentStatus,
+      paymentStatus: resolvedPaymentStatus,
+      paymentMethod: data.paymentMethod,
+      _rawStatus: data.status,
       storePickupOtp: data.storePickupOtp,
       deliveryOtp: data.deliveryOtp,
+      storeOtpConfirmed: Boolean(data.storeOtpConfirmed),
+      storePickupOtpVerified: Boolean(data.storePickupOtpVerified),
+      deliveryStatus: data.deliveryStatus,
       deliveryPartnerId: data.deliveryPartnerId,
       deliveryPartnerName: data.deliveryPartnerName,
       deliveryPartnerPhone: data.deliveryPartnerPhone,
@@ -171,31 +205,45 @@ export class FirestoreService {
 
   // Subscribe to a single order document in real-time
   static subscribeOrder(orderId: string, onUpdate: (order: StoreOrder | null) => void) {
-    const docRef = doc(db, 'customOrders', orderId);
-    return onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        onUpdate(FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'customOrders'));
-      } else {
-        // Check backup 'orders' collection if not in customOrders
-        const altRef = doc(db, 'orders', orderId);
-        getDoc(altRef).then((altSnap) => {
-          if (altSnap.exists()) {
-            onUpdate(FirestoreService.mapDocToStoreOrder(altSnap.id, altSnap.data(), 'orders'));
-          } else {
-            onUpdate(null);
-          }
-        }).catch(() => onUpdate(null));
+    const customRef = doc(db, 'customOrders', orderId);
+    const orderRef = doc(db, 'orders', orderId);
+    
+    let currentCustom: StoreOrder | null = null;
+    let currentOrder: StoreOrder | null = null;
+
+    const emit = () => {
+      // Prioritize customOrders when it exists and has items
+      if (currentCustom && currentCustom.items && currentCustom.items.length > 0) {
+        onUpdate(currentCustom);
+      } else if (currentOrder) {
+        onUpdate(currentOrder);
+      } else if (currentCustom) {
+        onUpdate(currentCustom);
+      }
+    };
+
+    const unsubCustom = onSnapshot(customRef, (snap) => {
+      if (snap.exists()) {
+        currentCustom = FirestoreService.mapDocToStoreOrder(snap.id, snap.data(), 'customOrders');
+        emit();
       }
     }, (error) => {
-      console.warn('[FirestoreService] subscribeOrder error:', error);
-      getDoc(docRef).then((snap) => {
-        if (snap.exists()) {
-          onUpdate(FirestoreService.mapDocToStoreOrder(snap.id, snap.data(), 'customOrders'));
-        } else {
-          onUpdate(null);
-        }
-      }).catch(() => onUpdate(null));
+      console.warn('[FirestoreService] subscribeOrder custom error:', error);
     });
+
+    const unsubOrder = onSnapshot(orderRef, (snap) => {
+      if (snap.exists()) {
+        currentOrder = FirestoreService.mapDocToStoreOrder(snap.id, snap.data(), 'orders');
+        emit();
+      }
+    }, (error) => {
+      console.warn('[FirestoreService] subscribeOrder normal error:', error);
+    });
+
+    return () => {
+      unsubCustom();
+      unsubOrder();
+    };
   }
 
   // ORDERS (STORE PRIVACY Projection `storeOrders/{storeId}/orders`)
@@ -209,16 +257,40 @@ export class FirestoreService {
     let customOrdersList: StoreOrder[] = [];
     let ordersList: StoreOrder[] = [];
     
+    const activeAllowedStatuses = [
+      OrderStatus.New, 
+      OrderStatus.PendingDoctorConfirmation,
+      OrderStatus.Accepted, 
+      OrderStatus.Preparing, 
+      OrderStatus.Ready,
+      OrderStatus.DeliveryRequested, 
+      OrderStatus.DeliveryPartnerAssigned,
+      OrderStatus.OutOfDelivery, 
+      OrderStatus.PickedUp
+    ];
+
     const emitUpdate = () => {
-      let combined = [...customOrdersList, ...ordersList];
+      // Deduplicate orders across customOrders and orders collections
+      // Prioritize customOrders because it has complete itemized bill and prescription data
+      const orderMap = new Map<string, StoreOrder>();
+      ordersList.forEach(o => orderMap.set(o.id, o));
+      customOrdersList.forEach(o => orderMap.set(o.id, o));
       
-      combined = combined.filter(o => 
-        !storeId || (o.status === OrderStatus.New && !o._storeId) || o._storeId === storeId || !o._storeId
-      ).filter(o => [
-        OrderStatus.New, OrderStatus.Accepted, OrderStatus.Preparing, OrderStatus.Ready,
-        OrderStatus.DeliveryRequested, OrderStatus.DeliveryPartnerAssigned,
-        OrderStatus.OutOfDelivery, OrderStatus.PickedUp
-      ].includes(o.status));
+      let combined = Array.from(orderMap.values());
+      
+      combined = combined.filter(o => {
+        if (!storeId) return true;
+        // Unassigned or unclaimed orders visible to all stores
+        if (!o._storeId) return true;
+        // Orders assigned to this store visible
+        return o._storeId === storeId;
+      }).filter(o => {
+        // Only exclude finished/cancelled orders from the active pipeline
+        if (o.status === OrderStatus.Completed || o.status === OrderStatus.Rejected || o.status === OrderStatus.TimedOut) {
+          return false;
+        }
+        return true;
+      });
 
       combined = combined.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
       onUpdate(combined);
@@ -256,7 +328,11 @@ export class FirestoreService {
     let ordersList: StoreOrder[] = [];
 
     const emitUpdate = () => {
-      let combined = [...customOrdersList, ...ordersList];
+      const orderMap = new Map<string, StoreOrder>();
+      ordersList.forEach(o => orderMap.set(o.id, o));
+      customOrdersList.forEach(o => orderMap.set(o.id, o));
+
+      let combined = Array.from(orderMap.values());
       
       combined = combined.filter(o => [OrderStatus.Completed, OrderStatus.Rejected, OrderStatus.TimedOut].includes(o.status));
       combined = combined.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
@@ -336,15 +412,21 @@ export class FirestoreService {
     } else if (
       status === OrderStatus.OutOfDelivery ||
       status === 'OUT_OF_DELIVERY' ||
-      status === 'out_for_delivery' ||
+      status === 'out_for_delivery'
+    ) {
+      updateData.status = 'delivery boy assigned';
+      updateData.storeStatus = OrderStatus.OutOfDelivery;
+      updateData.deliveryStatus = 'en_route_delivery';
+      updateData.deliveryPartnerAssignedAt = new Date().toISOString();
+    } else if (
       status === OrderStatus.DeliveryPartnerAssigned ||
       status === 'DELIVERY_PARTNER_ASSIGNED' ||
       status === 'delivery boy assigned' ||
       status === 'delivery partner assigned'
     ) {
-      updateData.status = 'delivery boy assigned';
-      updateData.storeStatus = OrderStatus.OutOfDelivery;
-      updateData.deliveryStatus = 'en_route_delivery';
+      updateData.status = 'DELIVERY_ASSIGNED';
+      updateData.storeStatus = OrderStatus.DeliveryPartnerAssigned;
+      updateData.deliveryStatus = 'en_route_pickup';
       updateData.deliveryPartnerAssignedAt = new Date().toISOString();
     }
     
@@ -364,8 +446,8 @@ export class FirestoreService {
       }
 
       const data = snap.data();
-      // Fetch storePickupOtp from Firestore document (only field used for store verification)
-      const expectedOtp = data.storePickupOtp;
+      // Fetch storePickupOtp from Firestore document (with fallbacks for robustness)
+      const expectedOtp = data.storePickupOtp || data.pickupPin || data.pickupOtp || data.deliveryOtp || data.otp;
 
       if (!expectedOtp) {
         return { success: false, error: 'No pickup OTP found in database for this order.' };
@@ -376,14 +458,15 @@ export class FirestoreService {
         return { success: false, error: 'Invalid OTP. The code entered does not match the Store Pickup OTP.' };
       }
 
-      // Generate a SEPARATE deliveryOtp for the customer to verify delivery at their door
-      const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      // Preserve or generate customer deliveryOtp for customer doorstep verification
+      const deliveryOtp = data.deliveryOtp || data.otp || Math.floor(1000 + Math.random() * 9000).toString();
       const nowIso = new Date().toISOString();
       const updatePayload: any = {
         status: 'delivery boy assigned',
         storeStatus: OrderStatus.OutOfDelivery,
         deliveryStatus: 'en_route_delivery',
         deliveryOtp: deliveryOtp,
+        otp: deliveryOtp,
         storeOtpConfirmed: true,
         storePickupOtpVerified: true,
         pickedUpAt: nowIso,
@@ -396,16 +479,7 @@ export class FirestoreService {
       // Also update backup 'orders' collection if used
       try {
         const altRef = doc(db, 'orders', orderId);
-        await updateDoc(altRef, {
-          status: 'delivery boy assigned',
-          storeStatus: OrderStatus.OutOfDelivery,
-          deliveryStatus: 'en_route_delivery',
-          deliveryOtp: deliveryOtp,
-          storeOtpConfirmed: true,
-          storePickupOtpVerified: true,
-          pickedUpAt: nowIso,
-          updatedAt: nowIso,
-        });
+        await updateDoc(altRef, updatePayload);
       } catch (_) {}
 
       return { success: true };

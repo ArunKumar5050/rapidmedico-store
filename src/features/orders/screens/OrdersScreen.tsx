@@ -15,19 +15,79 @@ export const OrdersScreen = ({ navigation }: any) => {
   const { storeId } = useAuthStore();
   const { activeOrders, completedOrders } = useOrderStore();
 
-  const allOrders = [...activeOrders, ...completedOrders];
-  const filteredOrders = activeTab === 'All' ? allOrders : allOrders.filter((o) => o.status === activeTab);
+  // Deduplicate orders by ID across active and completed lists
+  const orderMap = new Map<string, StoreOrder>();
+  [...activeOrders, ...completedOrders].forEach(o => orderMap.set(o.id, o));
+  const allOrders = Array.from(orderMap.values());
 
-  const getStatusBadgeStyle = (status: string) => {
-    switch (status) {
+  const newCount = allOrders.filter(o => [OrderStatus.New, OrderStatus.PendingDoctorConfirmation, OrderStatus.Accepted].includes(o.status)).length;
+  const prepCount = allOrders.filter(o => [OrderStatus.Preparing, OrderStatus.Ready].includes(o.status)).length;
+  const deliveryCount = allOrders.filter(o => [
+    OrderStatus.DeliveryRequested,
+    OrderStatus.DeliveryPartnerAssigned,
+    OrderStatus.OutOfDelivery,
+    OrderStatus.PickedUp
+  ].includes(o.status) || Boolean(o.deliveryPartnerId)).length;
+  const completedCount = allOrders.filter(o => o.status === OrderStatus.Completed).length;
+
+  const tabs = [
+    { id: 'All', label: `All (${allOrders.length})` },
+    { id: 'New', label: `New / Billed (${newCount})` },
+    { id: 'Preparing', label: `Preparing (${prepCount})` },
+    { id: 'Delivery', label: `Delivery (${deliveryCount})` },
+    { id: 'Completed', label: `Completed (${completedCount})` },
+  ];
+
+  const filteredOrders = allOrders.filter((o) => {
+    if (activeTab === 'All') return true;
+    if (activeTab === 'New') return [OrderStatus.New, OrderStatus.PendingDoctorConfirmation, OrderStatus.Accepted].includes(o.status);
+    if (activeTab === 'Preparing') return [OrderStatus.Preparing, OrderStatus.Ready].includes(o.status);
+    if (activeTab === 'Delivery') {
+      return [
+        OrderStatus.DeliveryRequested,
+        OrderStatus.DeliveryPartnerAssigned,
+        OrderStatus.OutOfDelivery,
+        OrderStatus.PickedUp
+      ].includes(o.status) || Boolean(o.deliveryPartnerId);
+    }
+    if (activeTab === 'Completed') return o.status === OrderStatus.Completed;
+    return true;
+  });
+
+  const getStatusBadgeStyle = (item: StoreOrder) => {
+    const isAwaitingOtp = item.status === OrderStatus.DeliveryPartnerAssigned || 
+                          (Boolean(item.deliveryPartnerId) && !item.storeOtpConfirmed && !item.storePickupOtpVerified);
+
+    if (isAwaitingOtp) {
+      return { 
+        bg: '#FEF3C7', 
+        text: '#B45309', 
+        border: '#F59E0B', 
+        label: '🛵 RIDER AT STORE (OTP NEEDED)' 
+      };
+    }
+
+    switch (item.status) {
       case OrderStatus.New:
-        return { bg: 'rgba(255,221,184,1)', text: '#2a1700', border: 'rgba(130,81,0,0.2)' }; // tertiary-fixed
+      case OrderStatus.PendingDoctorConfirmation:
+        return { bg: 'rgba(255,221,184,1)', text: '#2a1700', border: 'rgba(130,81,0,0.3)', label: 'NEW ORDER' };
+      case OrderStatus.Accepted:
+        return { bg: 'rgba(224,231,255,1)', text: '#3730A3', border: 'rgba(99,102,241,0.3)', label: 'BILLED' };
       case OrderStatus.Preparing:
-        return { bg: 'rgba(191,233,210,1)', text: '#446a58', border: 'rgba(64,102,84,0.2)' }; // secondary-container
+        return { bg: 'rgba(191,233,210,1)', text: '#446a58', border: 'rgba(64,102,84,0.3)', label: 'PREPARING' };
       case OrderStatus.Ready:
-        return { bg: 'rgba(130,249,192,1)', text: '#005236', border: 'rgba(0,106,71,0.2)' }; // primary-fixed
+        return { bg: 'rgba(130,249,192,1)', text: '#005236', border: 'rgba(0,106,71,0.3)', label: 'READY' };
+      case OrderStatus.DeliveryRequested:
+        return { bg: 'rgba(254,243,199,1)', text: '#B45309', border: 'rgba(245,158,11,0.4)', label: 'FINDING RIDER...' };
+      case OrderStatus.OutOfDelivery:
+      case OrderStatus.PickedUp:
+        return { bg: 'rgba(219,234,254,1)', text: '#1E40AF', border: 'rgba(59,130,246,0.3)', label: 'OUT FOR DELIVERY' };
+      case OrderStatus.Completed:
+        return { bg: 'rgba(220,252,231,1)', text: '#166534', border: 'rgba(34,197,94,0.3)', label: 'DELIVERED' };
+      case OrderStatus.Rejected:
+        return { bg: 'rgba(254,226,226,1)', text: '#991B1B', border: 'rgba(239,68,68,0.3)', label: 'REJECTED' };
       default:
-        return { bg: 'rgba(255,255,255,0.8)', text: colors.text.primary, border: 'rgba(255,255,255,1)' };
+        return { bg: 'rgba(255,255,255,0.8)', text: colors.text.primary, border: 'rgba(255,255,255,1)', label: String(item.status).replace(/_/g, ' ') };
     }
   };
 
@@ -37,43 +97,31 @@ export const OrdersScreen = ({ navigation }: any) => {
 
       <SafeAreaView style={styles.safeArea}>
 
-
         <View style={styles.header}>
           <Text style={styles.title}>Orders Pipeline</Text>
-          <Text style={styles.subtitle}>Manage and track active prescriptions.</Text>
+          <Text style={styles.subtitle}>Manage and track active prescriptions in real time.</Text>
         </View>
 
         <View style={styles.tabsRow}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
-            {[
-              'All',
-              OrderStatus.New,
-              OrderStatus.Accepted,
-              OrderStatus.Preparing,
-              OrderStatus.Ready,
-              OrderStatus.DeliveryRequested,
-              OrderStatus.DeliveryPartnerAssigned,
-              OrderStatus.OutOfDelivery,
-              OrderStatus.Completed,
-              OrderStatus.Rejected
-            ].map((status) => {
-              const isActive = activeTab === status;
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
               return (
                 <TouchableOpacity
-                  key={status}
+                  key={tab.id}
                   activeOpacity={0.8}
-                  onPress={() => setActiveTab(status)}
+                  onPress={() => setActiveTab(tab.id)}
                 >
                   {isActive ? (
                     <LinearGradient
                       colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
                       style={[styles.tab, styles.activeTabGradient]}
                     >
-                      <Text style={[styles.tabText, styles.activeTabText]}>{status}</Text>
+                      <Text style={[styles.tabText, styles.activeTabText]}>{tab.label}</Text>
                     </LinearGradient>
                   ) : (
                     <BlurView intensity={40} tint="light" style={[styles.tab, styles.inactiveTab]}>
-                      <Text style={styles.tabText}>{status}</Text>
+                      <Text style={styles.tabText}>{tab.label}</Text>
                     </BlurView>
                   )}
                 </TouchableOpacity>
@@ -88,7 +136,13 @@ export const OrdersScreen = ({ navigation }: any) => {
           </View>
         ) : filteredOrders.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No orders in this status.</Text>
+            <Text style={{ fontSize: 32, marginBottom: spacing.sm }}>📦</Text>
+            <Text style={styles.emptyText}>No orders in this stage.</Text>
+            {activeTab !== 'All' && (
+              <TouchableOpacity onPress={() => setActiveTab('All')} style={{ marginTop: spacing.md }}>
+                <Text style={{ color: colors.brand.primary, fontWeight: '700' }}>View All Orders ({allOrders.length})</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <FlatList
@@ -98,8 +152,10 @@ export const OrdersScreen = ({ navigation }: any) => {
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => {
               const timeStr = new Date(item.assignedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-              const medList = item.items?.map(i => i.name).join(', ') || 'No medicines listed';
-              const badgeStyle = getStatusBadgeStyle(item.status);
+              const medList = item.items?.map(i => i.name).filter(Boolean).join(', ') || 'Prescription Order';
+              const badgeStyle = getStatusBadgeStyle(item);
+              const isAwaitingOtp = item.status === OrderStatus.DeliveryPartnerAssigned || 
+                                    (Boolean(item.deliveryPartnerId) && !item.storeOtpConfirmed && !item.storePickupOtpVerified);
 
               return (
                 <TouchableOpacity 
@@ -107,15 +163,15 @@ export const OrdersScreen = ({ navigation }: any) => {
                   onPress={() => navigation.navigate('OrderDetails', { orderId: item.id })}
                 >
                   <LinearGradient
-                    colors={['rgba(255,255,255,0.7)', 'rgba(255,255,255,0.3)']}
+                    colors={isAwaitingOtp ? ['rgba(254,243,199,0.9)', 'rgba(255,255,255,0.7)'] : ['rgba(255,255,255,0.7)', 'rgba(255,255,255,0.3)']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={styles.orderCardWrap}
+                    style={[styles.orderCardWrap, isAwaitingOtp && { borderColor: '#F59E0B', borderWidth: 2 }]}
                   >
                     <BlurView intensity={50} tint="light" style={styles.orderCardInner}>
                       {/* Top Glowing Border */}
                       <LinearGradient
-                        colors={['transparent', 'rgba(255,255,255,0.7)', 'transparent']}
+                        colors={['transparent', isAwaitingOtp ? '#F59E0B' : 'rgba(255,255,255,0.7)', 'transparent']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.topGlowBorder}
@@ -138,9 +194,20 @@ export const OrdersScreen = ({ navigation }: any) => {
                           </View>
                         </View>
                         <View style={[styles.statusBadge, { backgroundColor: badgeStyle.bg, borderColor: badgeStyle.border }]}>
-                          <Text style={[styles.statusBadgeText, { color: badgeStyle.text }]}>{item.status}</Text>
+                          <Text style={[styles.statusBadgeText, { color: badgeStyle.text }]}>{badgeStyle.label}</Text>
                         </View>
                       </View>
+
+                      {isAwaitingOtp && item.deliveryPartnerName ? (
+                        <View style={{ backgroundColor: 'rgba(245,158,11,0.12)', borderRadius: 10, padding: 8, marginBottom: 10 }}>
+                          <Text style={{ fontSize: 13, color: '#92400E', fontWeight: '700' }}>
+                            🛵 Rider Assigned: {item.deliveryPartnerName} {item.deliveryPartnerPhone ? `(${item.deliveryPartnerPhone})` : ''}
+                          </Text>
+                          <Text style={{ fontSize: 12, color: '#B45309', marginTop: 2 }}>
+                            Delivery partner is waiting at the store. Enter pickup OTP to hand over.
+                          </Text>
+                        </View>
+                      ) : null}
                       
                       <View style={styles.rxContainer}>
                         <Text style={styles.rxText} numberOfLines={2}>
@@ -150,9 +217,17 @@ export const OrdersScreen = ({ navigation }: any) => {
                       </View>
                       
                       <View style={styles.cardFooter}>
-                        <View style={styles.viewButton}>
-                          <Text style={styles.viewButtonText}>View Order Details</Text>
-                        </View>
+                        {isAwaitingOtp ? (
+                          <View style={[styles.viewButton, { backgroundColor: colors.brand.primary, borderColor: colors.brand.primaryDark }]}>
+                            <Text style={[styles.viewButtonText, { color: '#ffffff', fontWeight: '700' }]}>
+                              🛵 Enter Pickup OTP & Hand Over →
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={styles.viewButton}>
+                            <Text style={styles.viewButtonText}>View Order Details →</Text>
+                          </View>
+                        )}
                       </View>
                     </BlurView>
                   </LinearGradient>
