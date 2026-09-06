@@ -49,12 +49,17 @@ export interface StoreOrder {
   rejectionNote?: string;
   assignedAt: string;
   paymentStatus?: string;
+  paymentMethod?: string;
+  _rawStatus?: string;
   createdAt?: string;
   updatedAt?: string;
   totalAmount?: number;
   billGeneratedAt?: string;
   storePickupOtp?: string;  // OTP delivery boy shows to store owner at pickup
   deliveryOtp?: string;     // OTP delivery boy shows to customer at doorstep
+  storeOtpConfirmed?: boolean;
+  storePickupOtpVerified?: boolean;
+  deliveryStatus?: string;
   deliveryPartnerId?: string;
   deliveryPartnerName?: string;
   deliveryPartnerPhone?: string;

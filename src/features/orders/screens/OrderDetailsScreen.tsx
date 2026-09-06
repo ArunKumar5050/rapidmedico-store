@@ -51,10 +51,15 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     };
   }, [orderId]);
 
-  const order = directOrder || activeOrders.find((o) => o.id === orderId) || completedOrders.find((o) => o.id === orderId);
+  const storeOrder = activeOrders.find((o) => o.id === orderId) || completedOrders.find((o) => o.id === orderId);
+  const baseOrder = directOrder && storeOrder ? { ...storeOrder, ...directOrder } : (directOrder || storeOrder);
+  const resolvedPaymentStatus = directOrder?.paymentStatus || storeOrder?.paymentStatus || baseOrder?.paymentStatus;
+  const resolvedPaymentMethod = directOrder?.paymentMethod || storeOrder?.paymentMethod || (baseOrder as any)?.paymentMethod;
+  const order = baseOrder ? { ...baseOrder, paymentStatus: resolvedPaymentStatus, paymentMethod: resolvedPaymentMethod } : null;
 
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order?.status || OrderStatus.New);
   const [editableItems, setEditableItems] = useState<EditableItem[]>([]);
+  const [isEditingBill, setIsEditingBill] = useState(false);
 
   const [prescriptionModalVisible, setPrescriptionModalVisible] = useState(false);
   const [rejectSheetVisible, setRejectSheetVisible] = useState(false);
@@ -66,15 +71,15 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { requestPartner, loading: deliveryLoading } = useRequestDeliveryPartner();
 
   useEffect(() => {
-    if (order) {
+    if (order?.status) {
       setCurrentStatus(order.status);
     }
-  }, [order?.status]);
+  }, [order?.status, order?.paymentStatus, order?.deliveryPartnerId, order?.storePickupOtp, order?.deliveryStatus]);
 
   useEffect(() => {
-    if (order && editableItems.length === 0) {
+    if (order && !isEditingBill) {
       let initItems = (order.items || []).map((it: any, idx: number) => ({
-        tempId: it.medicineId || `med-${Date.now()}-${idx}`,
+        tempId: it.medicineId || `med-${idx}`,
         name: it.name && it.name !== 'Unknown Medicine' ? it.name : '',
         quantity: (it.quantity !== undefined && it.quantity !== null) ? it.quantity.toString() : '1',
         price: (it.price !== undefined && it.price !== null && it.price !== 0) ? it.price.toString() : '',
@@ -89,7 +94,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
       setEditableItems(initItems);
     }
-  }, [order]);
+  }, [order?.items, isEditingBill]);
 
   if (!order) {
     if (loadingTimeout) {
@@ -176,6 +181,64 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const [billSavedLocally, setBillSavedLocally] = useState(false);
+  const hasSavedPrices = Boolean(
+    order?.totalAmount && 
+    order.totalAmount > 100 && 
+    order.items?.some((it: any) => (it.price || 0) > 0)
+  );
+  const isBillSaved = hasSavedPrices || billSavedLocally;
+
+  const isPaid = Boolean(
+    ['COMPLETED', 'PAID', 'COD'].includes(String(order?.paymentStatus || '').toUpperCase()) ||
+    ['COD'].includes(String(order?.paymentMethod || '').toUpperCase()) ||
+    String(order?.status || '').toUpperCase() === 'PAID' ||
+    String(order?._rawStatus || '').toUpperCase() === 'PAID' ||
+    String(currentStatus).toUpperCase() === 'PAID'
+  );
+
+  const isAcceptedState = currentStatus === OrderStatus.Accepted || 
+                          String(currentStatus).toUpperCase() === 'ACCEPTED' ||
+                          String(currentStatus).toUpperCase() === 'PAID';
+
+  const isNewOrPending = currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation;
+
+  // The price input is editable ONLY when:
+  // 1. Bill hasn't been saved yet (initial pricing), OR
+  // 2. Store explicitly clicked "Edit Bill", AND
+  // 3. Customer has not completed payment yet
+  const isPriceInputEditable = !isPaid && (!isBillSaved || isEditingBill);
+
+  const isPickupOtpVerified = Boolean(
+    order?.storeOtpConfirmed === true ||
+    order?.storePickupOtpVerified === true ||
+    order?.deliveryStatus === 'en_route_delivery' ||
+    order?.deliveryStatus === 'delivered' ||
+    currentStatus === OrderStatus.Completed
+  );
+
+  const isPartnerAssigned = Boolean(
+    order?.deliveryPartnerId ||
+    currentStatus === OrderStatus.DeliveryPartnerAssigned ||
+    String(order?.status).toUpperCase() === 'DELIVERY_ASSIGNED' ||
+    String(order?.status).toUpperCase() === 'DELIVERY_PARTNER_ASSIGNED' ||
+    String(order?.storeStatus).toUpperCase() === 'DELIVERY_ASSIGNED' ||
+    String(order?.storeStatus).toUpperCase() === 'DELIVERY_PARTNER_ASSIGNED' ||
+    String(currentStatus).toUpperCase() === 'DELIVERY_ASSIGNED' ||
+    String(currentStatus).toUpperCase() === 'DELIVERY_PARTNER_ASSIGNED'
+  );
+
+  const isDeliveryActive = Boolean(
+    currentStatus === OrderStatus.DeliveryRequested ||
+    currentStatus === OrderStatus.DeliveryPartnerAssigned ||
+    isPartnerAssigned ||
+    order?.deliveryPartnerId ||
+    order?.storePickupOtp
+  );
+
+  const showOtpCard = !isPickupOtpVerified && isDeliveryActive;
+  const showOutOfDeliveryCard = isPickupOtpVerified && (currentStatus === OrderStatus.OutOfDelivery || currentStatus === OrderStatus.PickedUp);
+
   const handleUpdateBill = async () => {
     let isValid = true;
     const updatedItems = editableItems.map(item => {
@@ -192,7 +255,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     });
 
     if (!isValid || updatedItems.length === 0) {
-      Alert.alert('Missing Info', 'Please ensure all medicines have a valid name, quantity, and price.');
+      Alert.alert('Missing Info', 'Please ensure all medicines have a valid name, quantity, and price greater than ₹0.');
       return;
     }
 
@@ -202,82 +265,50 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
 
     const totalAmount = calculateTotal();
-    const collectionName = order._collection || 'customOrders';
-
+    const collectionName = order?._collection || 'customOrders';
     try {
       await FirestoreService.updateOrderBill(storeId, orderId, updatedItems, totalAmount, collectionName);
-      Alert.alert('Success', 'Bill updated successfully.');
+      
+      // Auto-accept order so customer receives the priced bill
+      if (currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) {
+        await FirestoreService.acceptOrder(storeId, orderId, collectionName);
+        setCurrentStatus(OrderStatus.Accepted);
+      }
+
+      setBillSavedLocally(true);
+      setIsEditingBill(false);
+      Alert.alert('Bill Updated & Locked! 🎉', 'The price has been saved. Customer can now view the bill and proceed to payment or select Cash on Delivery.');
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to update bill.');
     }
   };
 
   const handlePrimaryAction = async () => {
-    if (isEditable) {
-      let isValid = true;
-      const updatedItems = editableItems.map(item => {
-        const p = parseFloat(item.price);
-        const q = parseInt(item.quantity, 10);
-        if (!item.name.trim() || isNaN(p) || p <= 0 || isNaN(q) || q <= 0) {
-          isValid = false;
+    const collectionName = order?._collection || 'customOrders';
+    try {
+      if (currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) {
+        await handleUpdateBill();
+      } else if (isAcceptedState) {
+        if (!isPaid) {
+          Alert.alert('Waiting for Payment', 'Cannot start preparing until customer completes payment or selects Cash on Delivery (COD).');
+          return;
         }
-        const updatedItem: any = { medicineId: item.tempId, name: item.name, quantity: q, price: p };
-        if (item.dosage) {
-          updatedItem.dosage = item.dosage;
+        const ok = await updateStatus(orderId, OrderStatus.Preparing, collectionName);
+        if (ok) setCurrentStatus(OrderStatus.Preparing);
+      } else if (currentStatus === OrderStatus.Preparing) {
+        const ok = await updateStatus(orderId, OrderStatus.Ready, collectionName);
+        if (ok) setCurrentStatus(OrderStatus.Ready);
+      } else if (currentStatus === OrderStatus.Ready) {
+        const res = await requestPartner(orderId, collectionName);
+        if (res.success) {
+          setCurrentStatus(OrderStatus.DeliveryRequested);
+          Alert.alert('Delivery Partner Requested 🛵', `Partner requested. Estimated pickup ETA: ${res.etaMinutes || 8} mins.`);
         }
-        return updatedItem;
-      });
-
-      if (!isValid || updatedItems.length === 0) {
-        Alert.alert('Missing Info', 'Please ensure all medicines have a valid name, quantity, and price.');
-        return;
       }
-
-      if (!storeId) {
-         Alert.alert('Error', 'Store ID is not available.');
-         return;
-      }
-
-      const totalAmount = calculateTotal();
-      const collectionName = order._collection || 'customOrders';
-
-      try {
-        await FirestoreService.updateOrderBill(storeId, orderId, updatedItems, totalAmount, collectionName);
-        
-        if (currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) {
-          const ok = await acceptOrder(orderId, collectionName);
-          if (ok) {
-             setCurrentStatus(OrderStatus.Accepted);
-          }
-        } else if (currentStatus === OrderStatus.Accepted || currentStatus === 'paid' || currentStatus === 'PAID' || currentStatus === 'completed' || currentStatus === 'COMPLETED') {
-          const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
-          if (!isPaid && currentStatus !== 'paid' && currentStatus !== 'completed') {
-            Alert.alert('Payment Pending', 'Cannot start preparing until customer completes the payment or selects Cash on Delivery.');
-            return;
-          }
-          const ok = await updateStatus(orderId, OrderStatus.Preparing, order._collection || 'customOrders');
-          if (ok) setCurrentStatus(OrderStatus.Preparing);
-        }
-      } catch (e: any) {
-        Alert.alert('Error', e.message || 'Failed to update order.');
-      }
-    } else if (currentStatus === OrderStatus.Preparing) {
-      const ok = await updateStatus(orderId, OrderStatus.Ready, order._collection || 'customOrders');
-      if (ok) setCurrentStatus(OrderStatus.Ready);
-    } else if (currentStatus === OrderStatus.Ready) {
-      const res = await requestPartner(orderId, order._collection || 'customOrders');
-      if (res.success) {
-        setCurrentStatus(OrderStatus.DeliveryRequested);
-        Alert.alert('Delivery Partner Requested', `Partner assigned. Estimated pickup ETA: ${res.etaMinutes || 8} mins.`);
-      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to update order status.');
     }
   };
-
-  const isPaid = ['COMPLETED', 'completed', 'PAID', 'paid', 'COD', 'cod'].includes(order.paymentStatus || '');
-  const isAcceptedState = currentStatus === OrderStatus.Accepted || currentStatus === 'paid' || currentStatus === 'PAID' || currentStatus === 'completed' || currentStatus === 'COMPLETED';
-  const isEditable = currentStatus === OrderStatus.New || 
-                     currentStatus === OrderStatus.PendingDoctorConfirmation ||
-                     isAcceptedState;
 
   return (
     <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={styles.container}>
@@ -302,51 +333,56 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             </View>
           </View>
 
-          {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && (
+          {!isBillSaved && (currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && (
             <LinearGradient colors={['#F59E0B', '#D97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.amberGradient}>
               <Text style={styles.amberGradientIcon}>⚠️</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.amberGradientTitle}>Action Required: Price Prescription</Text>
-                <Text style={styles.amberGradientDesc}>This order contains prescription items that need pricing before the customer can proceed to payment.</Text>
+                <Text style={styles.amberGradientTitle}>Action Required: Enter Medicine Prices</Text>
+                <Text style={styles.amberGradientDesc}>Enter the prices below and tap "Update Bill" so the customer can proceed to payment or select COD.</Text>
               </View>
             </LinearGradient>
           )}
 
-          {currentStatus === OrderStatus.Accepted && !isPaid && (
+          {isBillSaved && (currentStatus === OrderStatus.New || isAcceptedState) && !isPaid && (
             <LinearGradient colors={['#F59E0B', '#D97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.amberGradient}>
               <Text style={styles.amberGradientIcon}>⌛</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.amberGradientTitle}>Waiting for Customer to Pay</Text>
-                <Text style={styles.amberGradientDesc}>Customer needs to complete payment or select COD before you can prepare the order.</Text>
+                <Text style={styles.amberGradientTitle}>Waiting for Customer Payment / COD</Text>
+                <Text style={styles.amberGradientDesc}>Pricing is saved and bill is sent to the customer. Once the customer pays or selects Cash on Delivery (COD), "Start Preparing Order" will activate.</Text>
               </View>
             </LinearGradient>
           )}
 
           {/* Delivery Partner Pickup & OTP Verification Card */}
-          {currentStatus === OrderStatus.DeliveryRequested && (
+          {showOtpCard && (
             <BlurView intensity={50} tint="light" style={[styles.glassCard, styles.otpVerificationCard]}>
               <View style={styles.otpCardHeader}>
                 <View style={styles.otpIconBadge}>
                   <Text style={styles.otpIconText}>🛵</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.otpCardTitle}>Partner Verification</Text>
-                  <Text style={styles.otpCardSubtitle}>Awaiting partner arrival</Text>
+                  <Text style={styles.otpCardTitle}>Delivery Partner Verification</Text>
+                  <Text style={styles.otpCardSubtitle}>
+                    {order?.deliveryPartnerName 
+                      ? `Assigned: ${order.deliveryPartnerName}` 
+                      : (isPartnerAssigned ? 'Delivery Boy Assigned • At Store' : 'Awaiting partner assignment')}
+                  </Text>
                 </View>
-                <Badge label="AWAITING OTP" status="warning" />
+                <Badge label={isPartnerAssigned ? "ENTER OTP" : "SEARCHING"} status="warning" />
               </View>
 
               <View style={styles.otpInstructionBox}>
                 <Text style={styles.otpInstructionText}>
-                  When the delivery boy arrives at your store, ask him for the <Text style={{ fontWeight: '800', color: colors.brand.primaryDark }}>4-digit Pickup OTP</Text>. Enter it below to verify the right person and hand over the medicine parcel.
+                  Ask the delivery boy for the <Text style={{ fontWeight: '800', color: colors.brand.primaryDark }}>4-digit Pickup OTP</Text> shown on his screen. Enter it below to verify and hand over the medicine parcel.
                 </Text>
               </View>
 
-              {order.deliveryPartnerName ? (
+              {order?.deliveryPartnerName ? (
                 <View style={styles.partnerInfoRow}>
                   <Text style={styles.partnerInfoText}>
                     👤 Assigned Partner: <Text style={{ fontWeight: '700' }}>{order.deliveryPartnerName}</Text>
                     {order.deliveryPartnerPhone ? ` • 📞 ${order.deliveryPartnerPhone}` : ''}
+                    {order.deliveryPartnerVehicle ? ` • 🛵 ${order.deliveryPartnerVehicle}` : ''}
                   </Text>
                 </View>
               ) : null}
@@ -357,7 +393,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                   <TextInput
                     style={styles.otpInputField}
                     placeholder="••••"
-                    placeholderTextColor="rgba(0,0,0,0.2)"
+                    placeholderTextColor="rgba(0,0,0,0.25)"
                     keyboardType="number-pad"
                     maxLength={4}
                     value={otpInput}
@@ -374,12 +410,17 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                   onPress={handleVerifyOtp}
                   style={{ marginTop: spacing.md, width: '100%' }}
                 />
+                {order?.storePickupOtp ? (
+                  <Text style={{ fontSize: 12, color: colors.text.secondary, marginTop: 8, textAlign: 'center' }}>
+                    (Pickup OTP in DB: <Text style={{ fontWeight: '700', color: colors.brand.primaryDark }}>{order.storePickupOtp}</Text>)
+                  </Text>
+                ) : null}
               </View>
             </BlurView>
           )}
 
-          {/* Delivery Partner Assigned / Out of Delivery Card */}
-          {(currentStatus === OrderStatus.OutOfDelivery || currentStatus === OrderStatus.DeliveryPartnerAssigned || currentStatus === OrderStatus.PickedUp) && (
+          {/* Delivery Partner Assigned / Out of Delivery Card - ONLY after OTP verified! */}
+          {showOutOfDeliveryCard && (
             <BlurView intensity={40} tint="light" style={[styles.glassCard, styles.partnerAssignedCard]}>
               <View style={styles.assignedHeaderRow}>
                 <Text style={styles.assignedIcon}>🛵</Text>
@@ -463,16 +504,22 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             <View style={styles.cardHeader}>
               <Text style={styles.cardHeaderIcon}>🧾</Text>
               <Text style={styles.cardTitle}>Bill Editor</Text>
+              <View style={{ marginLeft: 'auto' }}>
+                <Badge 
+                  label={!isPriceInputEditable ? "PRICING LOCKED" : "EDITING PRICES"} 
+                  status={!isPriceInputEditable ? "success" : "warning"} 
+                />
+              </View>
             </View>
             
             <View style={styles.billItemsContainer}>
-              {isEditable ? (
+              {editableItems.length > 0 ? (
                 <>
                   {editableItems.map((item, idx) => (
                     <View key={item.tempId} style={styles.billItemEdit}>
                       <View style={styles.billItemEditHeader}>
                         <TextInput
-                          style={[styles.inputEdit, { flex: 1, fontWeight: 'bold' }]}
+                          style={[styles.inputEdit, { flex: 1, fontWeight: 'bold' }, !isPriceInputEditable && { backgroundColor: 'rgba(235,238,242,0.85)', color: colors.text.secondary }]}
                           placeholder="Medicine Name"
                           value={item.name}
                           onChangeText={(val) => handleItemChange(item.tempId, 'name', val)}
@@ -483,7 +530,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                           <Text style={styles.labelSmNormal}>Qty:</Text>
                           <TextInput
-                            style={[styles.inputEdit, { flex: 1, marginLeft: spacing.xs, backgroundColor: 'rgba(255,255,255,0.3)', color: colors.text.secondary }]}
+                            style={[styles.inputEdit, { flex: 1, marginLeft: spacing.xs, backgroundColor: 'rgba(235,238,242,0.85)', color: colors.text.secondary }]}
                             placeholder="1"
                             keyboardType="numeric"
                             value={item.quantity}
@@ -493,11 +540,21 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: spacing.sm }}>
                           <Text style={styles.currencySymbolEdit}>₹</Text>
                           <TextInput
-                            style={[styles.inputEdit, { flex: 1 }]}
+                            style={[
+                              styles.inputEdit, 
+                              { flex: 1 },
+                              !isPriceInputEditable && { 
+                                backgroundColor: 'rgba(235,238,242,0.85)', 
+                                color: colors.text.secondary,
+                                borderColor: 'rgba(0,0,0,0.1)'
+                              }
+                            ]}
                             placeholder="0.00"
+                            placeholderTextColor="rgba(0,0,0,0.3)"
                             keyboardType="numeric"
                             value={item.price}
                             onChangeText={(val) => handleItemChange(item.tempId, 'price', val)}
+                            editable={isPriceInputEditable}
                           />
                         </View>
                       </View>
@@ -520,7 +577,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             <View style={styles.totalsContainer}>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabelSub}>Subtotal</Text>
-                <Text style={styles.totalAmountSub}>₹{isEditable ? (calculateTotal() - 100).toFixed(2) : ((order.totalAmount || 0) - 100).toFixed(2)}</Text>
+                <Text style={styles.totalAmountSub}>₹{Math.max(0, (order.totalAmount || calculateTotal()) - 100).toFixed(2)}</Text>
               </View>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabelSub}>Delivery Fee</Text>
@@ -528,7 +585,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
               </View>
               <View style={[styles.totalRow, styles.grandTotalRow]}>
                 <Text style={styles.totalLabelGrand}>Total</Text>
-                <Text style={styles.totalAmountGrand}>₹{isEditable ? calculateTotal().toFixed(2) : (order.totalAmount || 0).toFixed(2)}</Text>
+                <Text style={styles.totalAmountGrand}>₹{(order.totalAmount || calculateTotal()).toFixed(2)}</Text>
               </View>
             </View>
           </BlurView>
@@ -539,30 +596,59 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
         {/* Fixed Bottom Actions */}
         <BlurView intensity={90} tint="light" style={styles.footer}>
           <View style={styles.footerContainer}>
-            {isEditable && (
+            {/* If bill is being edited or unpriced: Show Update Bill button */}
+            {isPriceInputEditable && (
               <>
                 {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && (
                   <TouchableOpacity style={styles.rejectBtn} onPress={() => setRejectSheetVisible(true)}>
                     <Text style={styles.rejectBtnText}>Reject Order</Text>
                   </TouchableOpacity>
                 )}
-                {isAcceptedState && !isPaid && (
-                  <TouchableOpacity style={styles.updateBtn} onPress={handleUpdateBill}>
-                    <Text style={styles.updateBtnText}>Update Bill</Text>
+                {isEditingBill && isAcceptedState && (
+                  <TouchableOpacity style={styles.rejectBtn} onPress={() => setIsEditingBill(false)}>
+                    <Text style={styles.rejectBtnText}>Cancel</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity 
-                  style={[styles.emeraldGradientBtn, isAcceptedState && !isPaid ? { opacity: 0.5 } : {}]} 
-                  onPress={handlePrimaryAction}
-                  disabled={isAcceptedState && !isPaid}
+                  style={[styles.emeraldGradientBtn, { flex: 1 }]} 
+                  onPress={handleUpdateBill}
                 >
                   <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
+                    <Text style={styles.emeraldGradientBtnText}>Update Bill 🧾</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* If bill is saved/locked and status is New or Accepted: Show Edit Bill + Start Preparing (disabled until payment done) */}
+            {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && (
+              <>
+                {!isPaid && (
+                  <TouchableOpacity 
+                    style={styles.updateBtn} 
+                    onPress={() => setIsEditingBill(true)}
+                  >
+                    <Text style={styles.updateBtnText}>✏️ Edit Bill</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity 
+                  style={[
+                    styles.emeraldGradientBtn, 
+                    { flex: 1 }, 
+                    !isPaid ? { opacity: 0.45, backgroundColor: '#9CA3AF' } : {}
+                  ]} 
+                  onPress={handlePrimaryAction}
+                  disabled={!isPaid}
+                >
+                  <LinearGradient 
+                    colors={isPaid ? [colors.brand.primary, colors.brand.primaryDark] : ['#9CA3AF', '#6B7280']} 
+                    start={{ x: 0, y: 0 }} 
+                    end={{ x: 1, y: 1 }} 
+                    style={styles.emeraldGradientBtnInner}
+                  >
                     <Text style={styles.emeraldGradientBtnText}>
-                      {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) 
-                        ? 'Send Payment Link' 
-                        : 'Start Preparing'}
+                      {isPaid ? 'Start Preparing Order 🚀' : 'Start Preparing (Waiting for Payment / COD) ⏳'}
                     </Text>
-                    {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && <Text style={{ fontSize: 16, color: 'white', marginLeft: 8 }}>🚀</Text>}
                   </LinearGradient>
                 </TouchableOpacity>
               </>
@@ -571,7 +657,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             {currentStatus === OrderStatus.Preparing && (
               <TouchableOpacity style={styles.emeraldGradientBtn} onPress={handlePrimaryAction}>
                 <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
-                  <Text style={styles.emeraldGradientBtnText}>Mark as Packed & Ready</Text>
+                  <Text style={styles.emeraldGradientBtnText}>Mark as Packed & Ready 📦</Text>
                 </LinearGradient>
               </TouchableOpacity>
             )}
@@ -579,21 +665,24 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             {currentStatus === OrderStatus.Ready && (
               <TouchableOpacity style={styles.emeraldGradientBtn} onPress={handlePrimaryAction}>
                 <LinearGradient colors={[colors.brand.primary, colors.brand.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emeraldGradientBtnInner}>
-                  <Text style={styles.emeraldGradientBtnText}>Request Delivery Partner</Text>
-                  <Text style={{ fontSize: 16, color: 'white', marginLeft: 8 }}>🛵</Text>
+                  <Text style={styles.emeraldGradientBtnText}>Request Delivery Partner 🛵</Text>
                 </LinearGradient>
               </TouchableOpacity>
             )}
             
-            {currentStatus === OrderStatus.DeliveryRequested && (
-              <View style={styles.statusBoxFooter}>
-                <Text style={styles.statusBoxText}>Awaiting Delivery Partner (Enter OTP above)</Text>
+            {showOtpCard && (
+              <View style={[styles.statusBoxFooter, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }]}>
+                <Text style={[styles.statusBoxText, { color: '#92400E', fontWeight: '800' }]}>
+                  {isPartnerAssigned 
+                    ? '🛵 Delivery Partner Assigned • Enter OTP Above to Hand Over' 
+                    : 'Awaiting Delivery Partner Assignment (Enter OTP above)'}
+                </Text>
               </View>
             )}
 
-            {(currentStatus === OrderStatus.OutOfDelivery || currentStatus === OrderStatus.DeliveryPartnerAssigned || currentStatus === OrderStatus.PickedUp) && (
+            {showOutOfDeliveryCard && (
               <View style={styles.statusBoxFooter}>
-                <Text style={styles.statusBoxText}>✅ Out for Delivery</Text>
+                <Text style={styles.statusBoxText}>✅ Out for Delivery (Handover Complete)</Text>
               </View>
             )}
           </View>
