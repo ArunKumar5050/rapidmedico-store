@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -11,6 +12,26 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { AuthService } from '../../../services/firebase/auth';
 import { FirestoreService } from '../../../services/firebase/firestore';
 import { AvailabilityToggle } from '../../../components/ui/AvailabilityToggle';
+
+const StoreSettingsIcon = () => (
+  <View style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center' }}>
+    <Ionicons name="settings-sharp" size={28} color={colors.brand.primary} />
+    <View style={{ position: 'absolute' }}>
+      <Ionicons name="storefront-sharp" size={13} color="#ffffff" />
+    </View>
+  </View>
+);
+
+const StoreRatingsIcon = () => (
+  <View style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 1 }}>
+      <Ionicons name="star-sharp" size={10} color={colors.brand.primary} />
+      <Ionicons name="star-sharp" size={13} color={colors.brand.primary} style={{ marginHorizontal: 1 }} />
+      <Ionicons name="star-sharp" size={10} color={colors.brand.primary} />
+    </View>
+    <Ionicons name="storefront-sharp" size={16} color={colors.brand.primary} />
+  </View>
+);
 
 export const ProfileScreen = ({ navigation }: any) => {
   const { store, storeId, setAvailability, logout } = useAuthStore();
@@ -105,7 +126,7 @@ export const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.cardsContainer}>
             <TouchableOpacity style={styles.glassCard} onPress={() => navigation.navigate('PerformanceDashboard')} activeOpacity={0.8}>
               <View style={styles.cardIconWrapper}>
-                <Text style={styles.cardIcon}>📊</Text>
+                <Ionicons name="analytics-sharp" size={26} color={colors.brand.primary} />
               </View>
               <View style={styles.cardTextWrapper}>
                 <Text style={styles.cardTitle}>Performance Dashboard</Text>
@@ -116,7 +137,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
             <TouchableOpacity style={styles.glassCard} onPress={() => navigation.navigate('WorkingHours')} activeOpacity={0.8}>
               <View style={styles.cardIconWrapper}>
-                <Text style={styles.cardIcon}>⏰</Text>
+                <MaterialCommunityIcons name="briefcase-clock" size={26} color={colors.brand.primary} />
               </View>
               <View style={styles.cardTextWrapper}>
                 <Text style={styles.cardTitle}>Working Hours</Text>
@@ -127,7 +148,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
             <TouchableOpacity style={styles.glassCard} onPress={() => navigation.navigate('StoreSettings')} activeOpacity={0.8}>
               <View style={styles.cardIconWrapper}>
-                <Text style={styles.cardIcon}>⚙️</Text>
+                <StoreSettingsIcon />
               </View>
               <View style={styles.cardTextWrapper}>
                 <Text style={styles.cardTitle}>Store Settings</Text>
@@ -138,7 +159,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
             <TouchableOpacity style={styles.glassCard} onPress={() => navigation.navigate('Ratings')} activeOpacity={0.8}>
               <View style={styles.cardIconWrapper}>
-                <Text style={styles.cardIcon}>⭐</Text>
+                <StoreRatingsIcon />
               </View>
               <View style={styles.cardTextWrapper}>
                 <Text style={styles.cardTitle}>Store Ratings</Text>
@@ -149,7 +170,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
             <TouchableOpacity style={styles.glassCard} onPress={() => navigation.navigate('Support')} activeOpacity={0.8}>
               <View style={styles.cardIconWrapper}>
-                <Text style={styles.cardIcon}>💬</Text>
+                <Ionicons name="chatbubbles-sharp" size={26} color={colors.brand.primary} />
               </View>
               <View style={styles.cardTextWrapper}>
                 <Text style={styles.cardTitle}>Support</Text>
@@ -161,7 +182,6 @@ export const ProfileScreen = ({ navigation }: any) => {
             {/* Logout Button */}
             <View style={styles.logoutContainer}>
               <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
-                <Text style={styles.logoutIcon}>🚪</Text>
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
             </View>

@@ -1,13 +1,27 @@
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { DashboardScreen } from '../../features/dashboard/screens/DashboardScreen';
 import { OrdersScreen } from '../../features/orders/screens/OrdersScreen';
 import { InventoryScreen } from '../../features/inventory/screens/InventoryScreen';
 import { AnalyticsScreen } from '../../features/analytics/screens/AnalyticsScreen';
 import { ProfileScreen } from '../../features/profile/screens/ProfileScreen';
 import { colors } from '../../theme/tokens';
+
+const CircleHomeIcon = ({ color }: { color: string }) => (
+  <View style={{
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: color,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}>
+    <Ionicons name="home-sharp" size={15} color="#ffffff" />
+  </View>
+);
 
 const Tab = createBottomTabNavigator();
 
@@ -31,11 +45,21 @@ export const TabNavigator = () => {
         },
         tabBarIcon: ({ color }) => {
           let icon = '🏠';
-          if (route.name === 'DashboardTab') icon = '📊';
-          if (route.name === 'OrdersTab') icon = '📦';
-          if (route.name === 'InventoryTab') icon = '💊';
-          if (route.name === 'AnalyticsTab') icon = '📈';
-          if (route.name === 'ProfileTab') icon = '👤';
+          if (route.name === 'ProfileTab') {
+            return <Ionicons name="storefront-sharp" size={24} color={color} />;
+          }
+          if (route.name === 'InventoryTab') {
+            return <FontAwesome5 name="cubes" size={22} color={color} />;
+          }
+          if (route.name === 'DashboardTab') {
+            return <CircleHomeIcon color={color} />;
+          }
+          if (route.name === 'OrdersTab') {
+            return <Ionicons name="cart-sharp" size={24} color={color} />;
+          }
+          if (route.name === 'AnalyticsTab') {
+            return <Ionicons name="stats-chart-sharp" size={22} color={color} />;
+          }
           return <Text style={{ fontSize: 20 }}>{icon}</Text>;
         },
       })}
