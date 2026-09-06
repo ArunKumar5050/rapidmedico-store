@@ -1,4 +1,4 @@
-# 📋 RapidMedico Store — Project Reference Guide
+# 📋 RapidMedicoco Store — Project Reference Guide
 
 > **Purpose:** Complete reference document covering architecture, data models, navigation, services, state, and patterns.  
 > Last updated: September 2026
@@ -31,7 +31,7 @@
 
 ## Project Overview
 
-**RapidMedico Store** is a React Native (Expo) mobile app for **pharmacy/medical store owners**. It is the **store-side partner app** in the RapidMedico ecosystem. Stores receive, manage, and fulfill medicine orders from customers.
+**RapidMedicoco Store** is a React Native (Expo) mobile app for **pharmacy/medical store owners**. It is the **store-side partner app** in the RapidMedicoco ecosystem. Stores receive, manage, and fulfill medicine orders from customers.
 
 ### Core Responsibilities
 - Receive real-time order alerts from the platform
@@ -72,7 +72,7 @@
 ## Project Structure
 
 ```
-rapidmedico-store/
+rapidmedicoco-store/
 ├── index.js                 # Root entry: ErrorBoundary + registerRootComponent
 ├── App.tsx                  # QueryClientProvider + StatusBar + RootNavigator
 ├── app.json                 # Expo config (Firebase keys, permissions, plugins)
@@ -369,7 +369,7 @@ searchQuery: string
 ### Firebase Services (`src/services/firebase/`)
 
 #### `config.ts`
-- Firebase project: **`rapidmedi`**
+- Firebase project: **`rapidmedico`**
 - Auth persistence via AsyncStorage (`initializeAuth` with `getReactNativePersistence`)
 - Safe singleton: uses `getApps().length === 0 ? initializeApp(...) : getApp()`
 - Exports: `auth`, `db`, `storage`, `functions`, `analytics`
@@ -607,10 +607,10 @@ All schemas use **Zod**:
 
 ```ts
 APP_CONFIG = {
-  appName: 'RapidMedico Store',
-  bundleId: 'com.rapidmedi.store',
-  deepLinkScheme: 'rapidmedi-store://',
-  firebaseProjectId: 'rapidmedi',
+  appName: 'RapidMedicoco Store',
+  bundleId: 'com.rapidmedico.store',
+  deepLinkScheme: 'rapidmedico-store://',
+  firebaseProjectId: 'rapidmedico',
 
   responseWindowSeconds: 90,     // Time window to respond to a new order
   otpLength: 6,
@@ -637,9 +637,9 @@ Rejection reason labels and KYC doc labels are also exported from this file.
 - `preview` — internal distribution
 - `production` — production store build
 
-### Android Package: `com.rapidmedi.store`
-### iOS Bundle ID: `com.rapidmedi.store`
-### Expo Slug: `rapidmedi-store`
+### Android Package: `com.rapidmedico.store`
+### iOS Bundle ID: `com.rapidmedico.store`
+### Expo Slug: `rapidmedico-store`
 ### EAS Project ID: `f0743a69-78fb-4845-a338-99cac71b3f94`
 ### Expo Owner: `arunkumar628`
 
@@ -748,4 +748,4 @@ npm run ts.check
 
 ---
 
-*This document covers the full scope of the `rapidmedico-store` codebase as of September 2026.*
+*This document covers the full scope of the `rapidmedicoco-store` codebase as of September 2026.*

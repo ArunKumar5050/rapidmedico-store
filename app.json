@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "RapidMedico Store",
-    "slug": "rapidmedi-store",
+    "name": "RapidMedicoco Store",
+    "slug": "rapidmedicoco-store",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
-    "scheme": "rapidmedi-store",
+    "scheme": "rapidmedicoco-store",
     "updates": {
       "enabled": false
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.rapidmedi.store",
+      "bundleIdentifier": "com.rapidmedicoco.store",
       "infoPlist": {
-        "NSCameraUsageDescription": "RapidMedico needs camera access to capture your documents and medicine photos.",
-        "NSPhotoLibraryUsageDescription": "RapidMedico needs gallery access to attach an existing photo."
+        "NSCameraUsageDescription": "RapidMedicoco needs camera access to capture your documents and medicine photos.",
+        "NSPhotoLibraryUsageDescription": "RapidMedicoco needs gallery access to attach an existing photo."
       }
     },
     "android": {
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#0F9D6C"
       },
-      "package": "com.rapidmedi.store",
+      "package": "com.rapidmedicoco.store",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.CAMERA",
@@ -54,15 +54,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "RapidMedico needs gallery access to attach an existing photo.",
-          "cameraPermission": "RapidMedico needs camera access to capture your documents and medicine photos."
+          "photosPermission": "RapidMedicoco needs gallery access to attach an existing photo.",
+          "cameraPermission": "RapidMedicoco needs camera access to capture your documents and medicine photos."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "RapidMedico needs your location to set your store coordinates.",
-          "locationWhenInUsePermission": "RapidMedico needs your location to set your store coordinates."
+          "locationAlwaysAndWhenInUsePermission": "RapidMedicoco needs your location to set your store coordinates.",
+          "locationWhenInUsePermission": "RapidMedicoco needs your location to set your store coordinates."
         }
       ],
       "expo-audio",
@@ -70,9 +70,9 @@
     ],
     "extra": {
       "firebaseApiKey": "AIzaSyDoqbjpy3pFiuvMCBhxffJH27bHBNaKTTA",
-      "firebaseAuthDomain": "rapidmedi.firebaseapp.com",
-      "firebaseProjectId": "rapidmedi",
-      "firebaseStorageBucket": "rapidmedi.firebasestorage.app",
+      "firebaseAuthDomain": "rapidmedico.firebaseapp.com",
+      "firebaseProjectId": "rapidmedico",
+      "firebaseStorageBucket": "rapidmedico.firebasestorage.app",
       "firebaseMessagingSenderId": "553213794552",
       "firebaseAppId": "1:553213794552:web:db1bdac54f2a80d791430d",
       "firebaseMeasurementId": "G-71EYHYR629",

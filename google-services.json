@@ -1,15 +1,15 @@
 {
   "project_info": {
     "project_number": "553213794552",
-    "project_id": "rapidmedi",
-    "storage_bucket": "rapidmedi.firebasestorage.app"
+    "project_id": "rapidmedico",
+    "storage_bucket": "rapidmedico.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
         "mobilesdk_app_id": "1:553213794552:android:f52dc45151be5c4b91430d",
         "android_client_info": {
-          "package_name": "com.rapidmedi.store"
+          "package_name": "com.rapidmedico.store"
         }
       },
       "oauth_client": [],

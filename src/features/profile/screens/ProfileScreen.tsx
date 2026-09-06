@@ -83,7 +83,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.headerIcon}>🏥</Text>
-            <Text style={styles.headerTitle}>RapidMedico</Text>
+            <Text style={styles.headerTitle}>RapidMedicoco</Text>
           </View>
           <View style={styles.headerRight}>
              <AvailabilityToggle status={availability} onToggle={handleToggleAvailability} />
@@ -174,7 +174,7 @@ export const ProfileScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.cardTextWrapper}>
                 <Text style={styles.cardTitle}>Support</Text>
-                <Text style={styles.cardSubtitle}>Get help from the RapidMedico team</Text>
+                <Text style={styles.cardSubtitle}>Get help from the RapidMedicoco team</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
             </TouchableOpacity>

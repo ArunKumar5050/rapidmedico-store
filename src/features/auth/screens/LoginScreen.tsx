@@ -80,7 +80,7 @@ export const LoginScreen = ({ navigation }: any) => {
                 {/* Logo & Brand */}
                 <View style={styles.brandContainer}>
                   <MaterialIcons name="local-pharmacy" size={36} color={C.emeraldDeep} />
-                  <Text style={styles.brandText}>RapidMedico</Text>
+                  <Text style={styles.brandText}>RapidMedicoco</Text>
                 </View>
 
                 {/* Titles */}

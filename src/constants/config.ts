@@ -1,10 +1,10 @@
 export const APP_CONFIG = {
-  appName: 'RapidMedico Store',
-  brandName: 'RapidMedico',
-  supportIdentity: 'RapidMedico Store Support',
-  deepLinkScheme: 'rapidmedi-store://',
-  bundleId: 'com.rapidmedi.store',
-  firebaseProjectId: 'rapidmedi',
+  appName: 'RapidMedicoco Store',
+  brandName: 'RapidMedicoco',
+  supportIdentity: 'RapidMedicoco Store Support',
+  deepLinkScheme: 'rapidmedicoco-store://',
+  bundleId: 'com.rapidmedicoco.store',
+  firebaseProjectId: 'rapidmedico',
 
   // Order & Alert Constants
   responseWindowSeconds: 90,

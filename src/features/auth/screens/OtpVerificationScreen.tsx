@@ -121,7 +121,7 @@ export const OtpVerificationScreen = ({ route, navigation }: any) => {
       } else {
         const newStore = {
           storeId: uid,
-          businessName: registrationData?.businessName || 'RapidMedico Pharmacy',
+          businessName: registrationData?.businessName || 'RapidMedicoco Pharmacy',
           ownerName: registrationData?.ownerName || 'Pharmacy Partner',
           phone: userPhone,
           category: registrationData?.category || 'PHARMACY',

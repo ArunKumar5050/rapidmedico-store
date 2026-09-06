@@ -12,9 +12,9 @@ const extra = Constants.expoConfig?.extra || {};
 
 const firebaseConfig = {
   apiKey: extra.firebaseApiKey || 'AIzaSyDoqbjpy3pFiuvMCBhxffJH27bHBNaKTTA',
-  authDomain: extra.firebaseAuthDomain || 'rapidmedi.firebaseapp.com',
-  projectId: extra.firebaseProjectId || 'rapidmedi',
-  storageBucket: extra.firebaseStorageBucket || 'rapidmedi.firebasestorage.app',
+  authDomain: extra.firebaseAuthDomain || 'rapidmedico.firebaseapp.com',
+  projectId: extra.firebaseProjectId || 'rapidmedico',
+  storageBucket: extra.firebaseStorageBucket || 'rapidmedico.firebasestorage.app',
   messagingSenderId: extra.firebaseMessagingSenderId || '553213794552',
   appId: extra.firebaseAppId || '1:553213794552:web:db1bdac54f2a80d791430d',
   measurementId: extra.firebaseMeasurementId || 'G-71EYHYR629',
