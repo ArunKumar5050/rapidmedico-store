@@ -176,6 +176,42 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const handleUpdateBill = async () => {
+    let isValid = true;
+    const updatedItems = editableItems.map(item => {
+      const p = parseFloat(item.price);
+      const q = parseInt(item.quantity, 10);
+      if (!item.name.trim() || isNaN(p) || p <= 0 || isNaN(q) || q <= 0) {
+        isValid = false;
+      }
+      const updatedItem: any = { medicineId: item.tempId, name: item.name, quantity: q, price: p };
+      if (item.dosage) {
+        updatedItem.dosage = item.dosage;
+      }
+      return updatedItem;
+    });
+
+    if (!isValid || updatedItems.length === 0) {
+      Alert.alert('Missing Info', 'Please ensure all medicines have a valid name, quantity, and price.');
+      return;
+    }
+
+    if (!storeId) {
+       Alert.alert('Error', 'Store ID is not available.');
+       return;
+    }
+
+    const totalAmount = calculateTotal();
+    const collectionName = order._collection || 'customOrders';
+
+    try {
+      await FirestoreService.updateOrderBill(storeId, orderId, updatedItems, totalAmount, collectionName);
+      Alert.alert('Success', 'Bill updated successfully.');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to update bill.');
+    }
+  };
+
   const handlePrimaryAction = async () => {
     if (isEditable) {
       let isValid = true;
@@ -510,6 +546,11 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                     <Text style={styles.rejectBtnText}>Reject Order</Text>
                   </TouchableOpacity>
                 )}
+                {isAcceptedState && !isPaid && (
+                  <TouchableOpacity style={styles.updateBtn} onPress={handleUpdateBill}>
+                    <Text style={styles.updateBtnText}>Update Bill</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity 
                   style={[styles.emeraldGradientBtn, isAcceptedState && !isPaid ? { opacity: 0.5 } : {}]} 
                   onPress={handlePrimaryAction}
@@ -519,7 +560,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                     <Text style={styles.emeraldGradientBtnText}>
                       {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) 
                         ? 'Send Payment Link' 
-                        : (isPaid ? 'Start Preparing' : 'Waiting for Payment')}
+                        : 'Start Preparing'}
                     </Text>
                     {(currentStatus === OrderStatus.New || currentStatus === OrderStatus.PendingDoctorConfirmation) && <Text style={{ fontSize: 16, color: 'white', marginLeft: 8 }}>🚀</Text>}
                   </LinearGradient>
@@ -797,6 +838,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rejectBtnText: { ...typography.caption, color: colors.alert.urgent, fontWeight: '700' },
+  updateBtn: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.brand.primary,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  updateBtnText: { ...typography.caption, color: colors.brand.primaryDark, fontWeight: '700' },
   emeraldGradientBtn: { flex: 1, borderRadius: 12, overflow: 'hidden', shadowColor: colors.brand.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12 },
   emeraldGradientBtnInner: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   emeraldGradientBtnText: { ...typography.caption, color: 'white', fontWeight: '700' },
