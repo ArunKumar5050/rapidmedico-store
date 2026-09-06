@@ -4,7 +4,7 @@
     "slug": "rapidmedi-store",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "scheme": "rapidmedi-store",
     "updates": {
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#0F9D6C"
       },
       "package": "com.rapidmedi.store",

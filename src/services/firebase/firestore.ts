@@ -147,8 +147,6 @@ export class FirestoreService {
     if (Array.isArray(data.images)) pUrls = [...pUrls, ...data.images];
     if (Array.isArray(data.medicineImageUrls)) pUrls = [...pUrls, ...data.medicineImageUrls];
     
-    const expectedOtp = data.storePickupOtp || data.pickupPin || data.pickupOtp || data.deliveryOtp || data.otp;
-
     return {
       id,
       customerFirstName: data.userName || data.customerName || 'Customer',
@@ -159,10 +157,8 @@ export class FirestoreService {
       assignedAt: assignedAtIso,
       respondByAt: respondByAtIso,
       paymentStatus: data.paymentStatus,
-      storePickupOtp: expectedOtp,
-      deliveryOtp: data.deliveryOtp || expectedOtp,
-      pickupOtp: data.pickupOtp || expectedOtp,
-      otp: expectedOtp,
+      storePickupOtp: data.storePickupOtp,
+      deliveryOtp: data.deliveryOtp,
       deliveryPartnerId: data.deliveryPartnerId,
       deliveryPartnerName: data.deliveryPartnerName,
       deliveryPartnerPhone: data.deliveryPartnerPhone,
@@ -327,18 +323,15 @@ export class FirestoreService {
       updatedAt: new Date().toISOString()
     };
 
-    // When store requests delivery partner, generate random 4-digit OTP and save to database
+    // When store requests delivery partner: generate storePickupOtp only
+    // (Delivery boy shows this to store owner to verify pickup)
     if (
       status === OrderStatus.DeliveryRequested ||
       status === 'DELIVERY_REQUESTED' ||
       status === OrderStatus.Ready
     ) {
-      const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
-      updateData.deliveryOtp = randomOtp;
-      updateData.pickupOtp = randomOtp;
-      updateData.storePickupOtp = randomOtp;
-      updateData.pickupPin = randomOtp;
-      updateData.otp = randomOtp;
+      const storePickupOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      updateData.storePickupOtp = storePickupOtp;
       updateData.deliveryRequestedAt = new Date().toISOString();
     } else if (
       status === OrderStatus.OutOfDelivery ||
@@ -349,12 +342,9 @@ export class FirestoreService {
       status === 'delivery boy assigned' ||
       status === 'delivery partner assigned'
     ) {
-      const randomDeliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
       updateData.status = 'delivery boy assigned';
       updateData.storeStatus = OrderStatus.OutOfDelivery;
       updateData.deliveryStatus = 'en_route_delivery';
-      updateData.deliveryOtp = randomDeliveryOtp; // Generate OTP named 'deliveryOtp' in the database
-      updateData.otp = randomDeliveryOtp;
       updateData.deliveryPartnerAssignedAt = new Date().toISOString();
     }
     
@@ -374,8 +364,8 @@ export class FirestoreService {
       }
 
       const data = snap.data();
-      // Specifically fetch storePickupOtp from Firestore document
-      const expectedOtp = data.storePickupOtp || data.pickupPin || data.pickupOtp || data.deliveryOtp || data.otp;
+      // Fetch storePickupOtp from Firestore document (only field used for store verification)
+      const expectedOtp = data.storePickupOtp;
 
       if (!expectedOtp) {
         return { success: false, error: 'No pickup OTP found in database for this order.' };
@@ -383,21 +373,19 @@ export class FirestoreService {
 
       // Verify the OTP provided by the delivery boy matches the storePickupOtp
       if (String(expectedOtp).trim() !== String(enteredOtp).trim()) {
-        return { success: false, error: 'Invalid OTP. The code entered does not match the Delivery Partner’s Store Pickup OTP.' };
+        return { success: false, error: 'Invalid OTP. The code entered does not match the Store Pickup OTP.' };
       }
 
-      // Preserve existing deliveryOtp from customer order, or generate only if missing
-      const finalDeliveryOtp = data.deliveryOtp || data.otp || Math.floor(1000 + Math.random() * 9000).toString();
+      // Generate a SEPARATE deliveryOtp for the customer to verify delivery at their door
+      const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
       const nowIso = new Date().toISOString();
       const updatePayload: any = {
         status: 'delivery boy assigned',
         storeStatus: OrderStatus.OutOfDelivery,
         deliveryStatus: 'en_route_delivery',
-        deliveryOtp: finalDeliveryOtp,
-        otp: finalDeliveryOtp,
+        deliveryOtp: deliveryOtp,
         storeOtpConfirmed: true,
         storePickupOtpVerified: true,
-        verifiedStorePickupOtp: String(enteredOtp).trim(),
         pickedUpAt: nowIso,
         deliveryPartnerAssignedAt: nowIso,
         updatedAt: nowIso,
@@ -412,11 +400,9 @@ export class FirestoreService {
           status: 'delivery boy assigned',
           storeStatus: OrderStatus.OutOfDelivery,
           deliveryStatus: 'en_route_delivery',
-          deliveryOtp: finalDeliveryOtp,
-          otp: finalDeliveryOtp,
+          deliveryOtp: deliveryOtp,
           storeOtpConfirmed: true,
           storePickupOtpVerified: true,
-          verifiedStorePickupOtp: String(enteredOtp).trim(),
           pickedUpAt: nowIso,
           updatedAt: nowIso,
         });

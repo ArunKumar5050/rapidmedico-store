@@ -53,10 +53,8 @@ export interface StoreOrder {
   updatedAt?: string;
   totalAmount?: number;
   billGeneratedAt?: string;
-  storePickupOtp?: string;
-  deliveryOtp?: string;
-  pickupOtp?: string;
-  otp?: string;
+  storePickupOtp?: string;  // OTP delivery boy shows to store owner at pickup
+  deliveryOtp?: string;     // OTP delivery boy shows to customer at doorstep
   deliveryPartnerId?: string;
   deliveryPartnerName?: string;
   deliveryPartnerPhone?: string;
