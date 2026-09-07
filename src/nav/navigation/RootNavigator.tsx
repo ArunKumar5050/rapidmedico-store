@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthNavigator } from './AuthNavigator';
-import { KycPendingNavigator } from './KycPendingNavigator';
 import { MainNavigator } from './MainNavigator';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useAuth } from '../../hooks/useAuth';
-import { KycStatus } from '../../types/enums';
 import { FullScreenOrderAlertModal } from '../../components/ui/FullScreenOrderAlertModal';
 import { useOrderStore } from '../../store/useOrderStore';
 import { FirestoreService } from '../../services/firebase/firestore';
@@ -36,8 +34,6 @@ export const RootNavigator = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : !store || store.kycStatus !== KycStatus.Approved ? (
-          <Stack.Screen name="KycPending" component={KycPendingNavigator} />
         ) : (
           <Stack.Screen name="Main" component={MainNavigator} />
         )}
