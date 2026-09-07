@@ -421,6 +421,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 28,
+    fontFamily: 'Nunito_800ExtraBold',
     fontWeight: '800',
     color: C.emeraldDeep,
     letterSpacing: -1,
@@ -432,6 +433,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: 12,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
     color: C.emeraldLush,
     textTransform: 'uppercase',
@@ -516,20 +518,24 @@ const styles = StyleSheet.create({
   stepCircleTextActive: {
     color: C.onPrimary,
     fontSize: 16,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
   },
   stepCircleTextInactive: {
     color: C.onSurfaceVariant,
     fontSize: 16,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
   },
   stepLabelActive: {
     fontSize: 12,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
     color: C.emeraldDeep,
   },
   stepLabelInactive: {
     fontSize: 12,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
     color: C.onSurfaceVariant,
   },
@@ -538,12 +544,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontFamily: 'Nunito_700Bold',
     fontWeight: '700',
     color: C.onBackground,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
     color: C.onSurfaceVariant,
     lineHeight: 24,
   },
@@ -552,6 +560,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
     color: C.onSurface,
     marginBottom: 8,
@@ -584,6 +593,7 @@ const styles = StyleSheet.create({
     paddingLeft: 40,
     paddingRight: 12,
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
     color: C.onBackground,
   },
   inputFocused: {
@@ -596,15 +606,18 @@ const styles = StyleSheet.create({
   errorText: {
     color: C.error,
     fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
     marginTop: 4,
   },
   pickerTextPlaceholder: {
     color: C.outline,
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
   },
   pickerTextSelected: {
     color: C.onBackground,
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
   },
   locationBtn: {
     flexDirection: 'row',
@@ -620,6 +633,7 @@ const styles = StyleSheet.create({
   locationBtnText: {
     color: C.emeraldDeep,
     fontSize: 14,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
   },
   submitContainer: {
@@ -648,6 +662,7 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: C.onPrimary,
     fontSize: 20,
+    fontFamily: 'Nunito_600SemiBold',
     fontWeight: '600',
   },
   modalOverlay: {
@@ -670,6 +685,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
+    fontFamily: 'Nunito_700Bold',
     fontWeight: '700',
     color: C.onBackground,
   },
@@ -679,6 +695,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
   },
   stateItem: {
     paddingVertical: 16,
@@ -687,6 +704,7 @@ const styles = StyleSheet.create({
   },
   stateItemText: {
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
     color: C.onBackground,
   },
 });

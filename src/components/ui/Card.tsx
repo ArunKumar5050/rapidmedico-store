@@ -25,22 +25,26 @@ export const Card: React.FC<CardProps> = ({ children, style, variant = 'flat' })
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background.secondary,
+    backgroundColor: '#FFFFFF',
     borderRadius: components.card.borderRadius,
     padding: components.card.padding,
     marginVertical: spacing.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 119, 182, 0.08)',
   },
   outlined: {
     backgroundColor: colors.background.primary,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border.default,
   },
   elevated: {
-    backgroundColor: colors.background.primary,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: '#FFFFFF',
+    shadowColor: colors.brand.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 119, 182, 0.06)',
   },
 });

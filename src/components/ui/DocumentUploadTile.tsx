@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   placeholderContainer: { alignItems: 'center', padding: spacing.md },
   uploadIcon: { fontSize: 32, marginBottom: spacing.xs },
-  uploadText: { ...typography.caption, color: colors.brand.primary, fontWeight: '600' },
+  uploadText: { ...typography.caption, color: colors.brand.primary, fontWeight: '600', fontFamily: 'Nunito_600SemiBold' },
   previewContainer: { width: '100%', height: 160, position: 'relative' },
   previewImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   changeBadge: {
@@ -124,5 +124,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     fontSize: 12,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
   },
 });

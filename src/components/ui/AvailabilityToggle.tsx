@@ -37,9 +37,9 @@ export const AvailabilityToggle: React.FC<AvailabilityToggleProps> = ({
     <TouchableOpacity activeOpacity={0.8} onPress={handlePress}>
       <LinearGradient
         colors={
-          isOnline 
-            ? [colors.brand.emeraldLush, colors.brand.primaryDark]
-            : [colors.text.muted, colors.text.secondary]
+          isOnline
+            ? [colors.brand.secondary, colors.brand.primary]   // cyan → blue when online
+            : ['#94A3B8', '#64748B']                            // slate grey when offline
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -59,9 +59,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 9999,
-    shadowColor: 'rgba(5, 150, 105, 0.3)',
+    shadowColor: colors.brand.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 4,
     gap: spacing.xs,
@@ -73,18 +73,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
   dotOnline: {
-    backgroundColor: '#ffffff',
-    shadowColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: '#FFFFFF',
+    shadowColor: 'rgba(255,255,255,0.9)',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 6,
+    elevation: 3,
   },
   label: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: '#ffffff',
     letterSpacing: 0.5,
   },
 });
-

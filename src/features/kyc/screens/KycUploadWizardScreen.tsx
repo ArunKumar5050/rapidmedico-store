@@ -242,7 +242,7 @@ export const KycUploadWizardScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.primary },
   header: { padding: spacing.lg, backgroundColor: colors.background.secondary, borderBottomWidth: 1, borderBottomColor: colors.border.default },
-  stepHeader: { ...typography.caption, color: colors.brand.primary, fontWeight: '700' },
+  stepHeader: { ...typography.caption, color: colors.brand.primary, fontWeight: '700', fontFamily: 'Nunito_700Bold' },
   stepTitle: { ...typography.h2, color: colors.text.primary, marginTop: 2 },
   content: { padding: spacing.lg },
   label: { ...typography.bodyStrong, color: colors.text.primary, marginBottom: spacing.xs },

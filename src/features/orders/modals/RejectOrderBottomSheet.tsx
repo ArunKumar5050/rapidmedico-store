@@ -137,7 +137,8 @@ const styles = StyleSheet.create({
   reasonText: { ...typography.bodyStrong, color: colors.text.primary },
   reasonTextSelected: { color: colors.action.reject },
   noteContainer: { marginTop: spacing.md },
-  noteLabel: { ...typography.caption, color: colors.text.primary, fontWeight: '700', marginBottom: spacing.xs },
+  noteLabel: { ...typography.caption, color: colors.text.primary, fontWeight: '700',
+    fontFamily: 'Nunito_700Bold', marginBottom: spacing.xs },
   noteInput: {
     backgroundColor: colors.background.secondary,
     borderRadius: 12,

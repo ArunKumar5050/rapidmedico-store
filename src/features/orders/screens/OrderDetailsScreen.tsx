@@ -530,7 +530,8 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
               <View style={styles.otpPromptBox}>
                 <Text style={styles.otpPromptText}>
-                  Ask the rider for their <Text style={{ fontWeight: '800', color: colors.brand.primaryDark }}>4-digit Pickup PIN</Text> shown on their screen.
+                  Ask the rider for their <Text style={{ fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold', color: colors.brand.primaryDark }}>4-digit Pickup PIN</Text> shown on their screen.
                 </Text>
               </View>
 
@@ -556,7 +557,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                 disabled={verifyOtpLoading}
               >
                 <LinearGradient
-                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  colors={[colors.brand.secondary, colors.brand.primary]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.verifyOtpBtnGradient}
@@ -588,7 +589,8 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
               </View>
               {order.deliveryPartnerName ? (
                 <Text style={styles.dispatchedRiderText}>
-                  🛵 Rider: <Text style={{ fontWeight: '700', color: '#151D19' }}>{order.deliveryPartnerName}</Text>
+                  🛵 Rider: <Text style={{ fontWeight: '700',
+    fontFamily: 'Nunito_700Bold', color: '#151D19' }}>{order.deliveryPartnerName}</Text>
                   {order.deliveryPartnerPhone ? ` • 📞 ${order.deliveryPartnerPhone}` : ''}
                 </Text>
               ) : null}
@@ -799,7 +801,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                   onPress={handleUpdateBill}
                 >
                   <LinearGradient
-                    colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                    colors={[colors.brand.secondary, colors.brand.primary]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientInner}
@@ -833,7 +835,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                 onPress={handlePrimaryAction}
               >
                 <LinearGradient
-                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  colors={[colors.brand.secondary, colors.brand.primary]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.gradientInner}
@@ -852,7 +854,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                 disabled={updateLoading}
               >
                 <LinearGradient
-                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  colors={[colors.brand.secondary, colors.brand.primary]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.gradientInner}
@@ -875,7 +877,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                 disabled={deliveryLoading}
               >
                 <LinearGradient
-                  colors={[colors.brand.emeraldLush, colors.brand.emeraldDeep]}
+                  colors={[colors.brand.secondary, colors.brand.primary]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.gradientInner}
@@ -974,6 +976,7 @@ const styles = StyleSheet.create({
   backIcon: {
     fontSize: 20,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
     marginLeft: -1,
   },
@@ -985,11 +988,13 @@ const styles = StyleSheet.create({
   headerMainTitle: {
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
   },
   headerSubId: {
     fontSize: 12,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
     color: colors.brand.primary,
     letterSpacing: 0.5,
   },
@@ -1002,6 +1007,7 @@ const styles = StyleSheet.create({
   headerStatusText: {
     fontSize: 11,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     letterSpacing: 0.5,
   },
 
@@ -1017,7 +1023,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(0, 106, 71, 0.1)',
+    borderColor: 'rgba(0, 119, 182, 0.12)',
     shadowColor: colors.brand.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
@@ -1032,25 +1038,28 @@ const styles = StyleSheet.create({
   heroOrderNumber: {
     fontSize: 22,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: colors.brand.primaryDark,
     letterSpacing: -0.5,
   },
   heroMetaText: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.secondary,
     marginTop: 4,
   },
   orderTypeTag: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: 'rgba(0, 119, 182, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderColor: 'rgba(0, 119, 182, 0.25)',
   },
   orderTypeTagText: {
     fontSize: 12,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.brand.primaryDark,
   },
   paymentRow: {
@@ -1074,6 +1083,7 @@ const styles = StyleSheet.create({
   paymentChipText: {
     fontSize: 13,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
   },
   paymentChipTextPaid: {
     color: '#166534',
@@ -1119,12 +1129,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stepCircleDone: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
+    backgroundColor: colors.brand.primary,
+    borderColor: colors.brand.primary,
   },
   stepCircleActive: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#10B981',
+    backgroundColor: '#E0F2FE',
+    borderColor: colors.brand.primary,
   },
   stepCirclePending: {
     backgroundColor: '#F9FAFB',
@@ -1133,27 +1143,31 @@ const styles = StyleSheet.create({
   stepCircleText: {
     fontSize: 12,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: '#9CA3AF',
   },
   stepCircleTextDone: {
     color: '#FFFFFF',
   },
   stepCircleTextActive: {
-    color: '#059669',
+    color: colors.brand.primary,
   },
   stepLabel: {
     fontSize: 11,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
     color: '#9CA3AF',
     textAlign: 'center',
   },
   stepLabelActive: {
-    color: '#059669',
+    color: colors.brand.primary,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
   },
   stepLabelDone: {
     color: '#374151',
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
   },
 
   // Alert Banners
@@ -1200,22 +1214,26 @@ const styles = StyleSheet.create({
   bannerTitle: {
     fontSize: 14,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: '#92400E',
     marginBottom: 2,
   },
   bannerDesc: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: '#B45309',
     lineHeight: 18,
   },
   bannerSearchingTitle: {
     fontSize: 14,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: '#92400E',
     marginBottom: 2,
   },
   bannerSearchingDesc: {
     fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
     color: '#B45309',
     lineHeight: 16,
   },
@@ -1227,8 +1245,8 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 2,
-    borderColor: '#10B981',
-    shadowColor: '#10B981',
+    borderColor: colors.brand.primary,
+    shadowColor: colors.brand.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
@@ -1243,9 +1261,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#E0F2FE',
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: '#BAE6FD',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -1253,10 +1271,12 @@ const styles = StyleSheet.create({
   otpCardTitle: {
     fontSize: 17,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: colors.text.primary,
   },
   otpCardSubtitle: {
     fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -1271,14 +1291,15 @@ const styles = StyleSheet.create({
   otpRequiredTagText: {
     fontSize: 10,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: '#B45309',
   },
   riderInfoBox: {
-    backgroundColor: '#F8FAF9',
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#E2E8E4',
+    borderColor: '#E2E8F0',
     marginBottom: spacing.md,
   },
   riderRow: {
@@ -1289,27 +1310,31 @@ const styles = StyleSheet.create({
   riderName: {
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
   },
   riderPhone: {
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
     color: colors.brand.primary,
   },
   riderVehicle: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.secondary,
     marginTop: 4,
   },
   otpPromptBox: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#E0F2FE',
     borderRadius: 10,
     padding: spacing.sm,
     marginBottom: spacing.md,
   },
   otpPromptText: {
     fontSize: 13,
-    color: '#065F46',
+    fontFamily: 'Nunito_400Regular',
+    color: '#0369A1',
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -1322,14 +1347,14 @@ const styles = StyleSheet.create({
     height: 62,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#10B981',
+    borderColor: colors.brand.primary,
     backgroundColor: '#FFFFFF',
     textAlign: 'center',
     fontSize: 32,
     fontWeight: '900',
     letterSpacing: 16,
     color: colors.brand.primaryDark,
-    shadowColor: '#10B981',
+    shadowColor: colors.brand.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -1352,6 +1377,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     letterSpacing: 0.5,
   },
   devPinBadge: {
@@ -1363,6 +1389,7 @@ const styles = StyleSheet.create({
   },
   devPinText: {
     fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
     color: '#4B5563',
   },
 
@@ -1382,10 +1409,12 @@ const styles = StyleSheet.create({
   dispatchedTitle: {
     fontSize: 16,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: '#166534',
   },
   dispatchedSubtitle: {
     fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
     color: '#15803D',
     marginTop: 2,
   },
@@ -1398,10 +1427,12 @@ const styles = StyleSheet.create({
   dispatchedPillText: {
     fontSize: 10,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: '#166534',
   },
   dispatchedRiderText: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: '#374151',
     marginTop: spacing.sm,
     paddingTop: spacing.xs,
@@ -1432,7 +1463,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0, 106, 71, 0.08)',
+    backgroundColor: 'rgba(0, 119, 182, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
@@ -1440,6 +1471,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.brand.primaryDark,
     flex: 1,
   },
@@ -1452,10 +1484,11 @@ const styles = StyleSheet.create({
   privacyBadgeText: {
     fontSize: 10,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: '#6B7280',
   },
   countBadge: {
-    backgroundColor: 'rgba(0, 106, 71, 0.1)',
+    backgroundColor: 'rgba(0, 119, 182, 0.1)',
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -1465,6 +1498,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 12,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: colors.brand.primaryDark,
   },
 
@@ -1480,6 +1514,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.muted,
     letterSpacing: 0.8,
     marginBottom: 4,
@@ -1487,10 +1522,12 @@ const styles = StyleSheet.create({
   fieldValue: {
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
   },
   fieldValueMuted: {
     fontSize: 14,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.secondary,
   },
   addressContainer: {
@@ -1511,6 +1548,7 @@ const styles = StyleSheet.create({
   addressText: {
     flex: 1,
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.primary,
     lineHeight: 18,
   },
@@ -1529,6 +1567,7 @@ const styles = StyleSheet.create({
   notesText: {
     flex: 1,
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: '#854D0E',
     lineHeight: 18,
   },
@@ -1577,6 +1616,7 @@ const styles = StyleSheet.create({
   },
   noPrescriptionText: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.muted,
   },
 
@@ -1598,6 +1638,7 @@ const styles = StyleSheet.create({
   billLockBadgeText: {
     fontSize: 11,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
   },
   billLockBadgeTextLocked: {
     color: '#065F46',
@@ -1610,12 +1651,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   itemRowCard: {
-    backgroundColor: '#F8FAF9',
+    backgroundColor: '#F8FAFC',
     borderRadius: 14,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: '#E2E8E4',
+    borderColor: '#E2E8F0',
   },
   itemRowHeader: {
     flexDirection: 'row',
@@ -1626,7 +1667,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: 'rgba(0, 106, 71, 0.1)',
+    backgroundColor: 'rgba(0, 119, 182, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
@@ -1634,16 +1675,19 @@ const styles = StyleSheet.create({
   itemIndexText: {
     fontSize: 11,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: colors.brand.primaryDark,
   },
   itemNameText: {
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
     flex: 1,
   },
   itemDosageText: {
     fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.muted,
     marginLeft: 4,
   },
@@ -1664,11 +1708,13 @@ const styles = StyleSheet.create({
   },
   qtyLabel: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.secondary,
   },
   qtyValue: {
     fontSize: 14,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: colors.text.primary,
   },
   priceInputWrapper: {
@@ -1677,7 +1723,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#10B981',
+    borderColor: colors.brand.primary,
     paddingHorizontal: spacing.sm,
     width: 140,
     height: 42,
@@ -1685,6 +1731,7 @@ const styles = StyleSheet.create({
   currencyPrefix: {
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
     marginRight: 4,
   },
@@ -1692,6 +1739,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
     paddingVertical: 0,
   },
@@ -1699,6 +1747,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.text.primary,
   },
   emptyItemsBox: {
@@ -1707,6 +1756,7 @@ const styles = StyleSheet.create({
   },
   emptyItemsText: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.muted,
   },
 
@@ -1723,11 +1773,13 @@ const styles = StyleSheet.create({
   },
   totalRowLabel: {
     fontSize: 14,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.secondary,
   },
   totalRowValue: {
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
     color: colors.text.primary,
   },
   totalDivider: {
@@ -1744,16 +1796,19 @@ const styles = StyleSheet.create({
   grandTotalLabel: {
     fontSize: 16,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: colors.brand.primaryDark,
   },
   grandTotalSub: {
     fontSize: 11,
+    fontFamily: 'Nunito_400Regular',
     color: colors.text.muted,
     marginTop: 1,
   },
   grandTotalValue: {
     fontSize: 22,
     fontWeight: '900',
+    fontFamily: 'Nunito_900Black',
     color: colors.brand.primaryDark,
   },
 
@@ -1795,6 +1850,7 @@ const styles = StyleSheet.create({
   btnSecondaryRejectText: {
     fontSize: 14,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: '#DC2626',
   },
   btnSecondaryCancel: {
@@ -1810,6 +1866,7 @@ const styles = StyleSheet.create({
   btnSecondaryCancelText: {
     fontSize: 14,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: '#4B5563',
   },
   btnPrimaryGradient: {
@@ -1844,6 +1901,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     letterSpacing: 0.3,
   },
 
@@ -1854,13 +1912,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: colors.brand.primary,
-    backgroundColor: 'rgba(0, 106, 71, 0.08)',
+    backgroundColor: 'rgba(0, 119, 182, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   btnEditBillText: {
     fontSize: 13,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: colors.brand.primaryDark,
   },
 
@@ -1878,6 +1937,7 @@ const styles = StyleSheet.create({
   btnDisabledWaitingText: {
     fontSize: 13,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: '#6B7280',
     textAlign: 'center',
   },
@@ -1898,6 +1958,7 @@ const styles = StyleSheet.create({
   searchingFooterText: {
     fontSize: 13,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: '#92400E',
   },
 
@@ -1915,6 +1976,7 @@ const styles = StyleSheet.create({
   riderAssignedFooterText: {
     fontSize: 13,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: '#065F46',
     textAlign: 'center',
   },
@@ -1932,6 +1994,7 @@ const styles = StyleSheet.create({
   dispatchedFooterText: {
     fontSize: 14,
     fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     color: '#166534',
   },
 });

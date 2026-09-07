@@ -324,12 +324,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     color: C.onSurface,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
     color: C.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 24,
@@ -352,6 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     fontSize: 24,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
     color: C.onSurface,
     textAlign: 'center',
   },
@@ -377,6 +380,7 @@ const styles = StyleSheet.create({
     color: C.onPrimary,
     fontSize: 20,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
   },
   footer: {
     marginTop: 24,
@@ -384,11 +388,13 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
     color: C.onSurfaceVariant,
   },
   timerText: {
     fontSize: 20,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
     color: C.emeraldDeep,
     marginTop: 4,
   },
@@ -399,6 +405,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 20,
     fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold',
     color: C.emeraldDeep,
   },
   resendBtnDisabled: {

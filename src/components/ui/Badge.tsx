@@ -20,14 +20,14 @@ export const Badge: React.FC<BadgeProps> = ({ label, status = 'neutral', style }
       case OrderStatus.DeliveryPartnerAssigned:
       case OrderStatus.OutOfDelivery:
       case OrderStatus.PickedUp:
-        return { bg: '#E0F2FE', text: '#0284C7' }; // Vibrant Sky/Cyan for assigned / out for delivery partner
+        return { bg: '#DBEAFE', text: '#1D4ED8' }; // blue for in-transit
       case OrderStatus.Accepted:
       case OrderStatus.Preparing:
       case OrderStatus.Ready:
       case OrderStatus.Completed:
       case 'success':
       case KycStatus.Approved:
-        return { bg: '#E6F4EA', text: colors.status.success };
+        return { bg: '#D1FAE5', text: '#065F46' }; // keep semantic green for success
       case OrderStatus.Rejected:
       case OrderStatus.TimedOut:
       case 'error':
@@ -35,7 +35,7 @@ export const Badge: React.FC<BadgeProps> = ({ label, status = 'neutral', style }
       case KycStatus.SuspendedExpired:
         return { bg: colors.alert.urgentLight, text: colors.alert.urgent };
       case 'info':
-        return { bg: '#E8F0FE', text: colors.status.info };
+        return { bg: '#DBEAFE', text: colors.brand.primary };
       default:
         return { bg: colors.background.tertiary, text: colors.text.secondary };
     }
@@ -54,13 +54,14 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
     alignSelf: 'flex-start',
     flexShrink: 1,
   },
   text: {
     ...typography.caption,
-    fontWeight: '600',
+    fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     flexWrap: 'wrap',
   },
 });

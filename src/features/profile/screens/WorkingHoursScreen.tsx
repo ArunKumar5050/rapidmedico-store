@@ -94,7 +94,7 @@ export const WorkingHoursScreen = ({ navigation }: any) => {
               <Switch
                 value={!val.closed}
                 onValueChange={() => toggleDayClosed(day)}
-                trackColor={{ false: colors.background.tertiary, true: '#A8E0C8' }}
+                trackColor={{ false: colors.background.tertiary, true: colors.brand.primaryLight }}
                 thumbColor={!val.closed ? colors.brand.primary : '#999'}
               />
             </View>

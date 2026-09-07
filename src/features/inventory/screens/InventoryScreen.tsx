@@ -127,8 +127,8 @@ export const InventoryScreen = ({ navigation }: any) => {
                 <Switch
                   value={item.inStock}
                   onValueChange={() => handleToggleStock(item.medicineId, item.inStock)}
-                  trackColor={{ false: colors.background.tertiary, true: '#A8E0C8' }}
-                  thumbColor={item.inStock ? colors.brand.primary : '#999'}
+                  trackColor={{ false: colors.background.tertiary, true: '#90E0EF' }}
+                  thumbColor={item.inStock ? colors.brand.primary : '#94A3B8'}
                 />
               </View>
             </View>
@@ -140,25 +140,27 @@ export const InventoryScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background.primary },
-  header: { padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.default },
+  container: { flex: 1, backgroundColor: '#F0F7FF' },
+  header: { padding: spacing.lg, paddingTop: spacing.xl, borderBottomWidth: 1, borderBottomColor: 'rgba(0,119,182,0.1)', backgroundColor: '#FFFFFF' },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  title: { ...typography.h1, color: colors.text.primary },
-  addBtn: { backgroundColor: colors.brand.primary, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8 },
-  addBtnText: { ...typography.button, color: '#FFF', fontSize: 14 },
+  title: { ...typography.h1, color: colors.text.primary, fontSize: 24 },
+  addBtn: { backgroundColor: colors.brand.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, shadowColor: colors.brand.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  addBtnText: { color: '#FFF', fontSize: 14, fontWeight: '700', fontFamily: 'Nunito_700Bold' },
   offlineBanner: { backgroundColor: colors.status.warningLight, padding: spacing.sm, borderRadius: 8, marginBottom: spacing.md },
-  offlineText: { ...typography.caption, color: colors.status.warning, fontWeight: '600' },
-  searchInput: { backgroundColor: colors.background.secondary, padding: spacing.md, borderRadius: 12, ...typography.body, marginBottom: spacing.sm },
+  offlineText: { ...typography.caption, color: colors.status.warning, fontWeight: '600', fontFamily: 'Nunito_600SemiBold' },
+  searchInput: { backgroundColor: '#F0F7FF', padding: spacing.md, borderRadius: 12, ...typography.body, marginBottom: spacing.sm, borderWidth: 1.5, borderColor: 'rgba(0,119,182,0.15)', color: colors.text.primary },
   bulkRow: { flexDirection: 'row', justifyContent: 'space-between' },
   bulkBtn: { paddingVertical: 4, paddingHorizontal: 8 },
-  bulkBtnText: { ...typography.caption, color: colors.brand.primary, fontWeight: '700' },
+  bulkBtnText: { ...typography.caption, color: colors.brand.primary, fontWeight: '700', fontFamily: 'Nunito_700Bold' },
   list: { padding: spacing.lg },
   card: { marginBottom: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   medName: { ...typography.bodyStrong, color: colors.text.primary },
   medGeneric: { ...typography.caption, color: colors.text.secondary },
   medPack: { ...typography.caption, color: colors.text.muted },
-  lowStockBadge: { ...typography.caption, color: colors.status.warning, fontWeight: '700', marginTop: 2 },
+  lowStockBadge: { ...typography.caption, color: colors.status.warning, fontWeight: '700',
+    fontFamily: 'Nunito_700Bold', marginTop: 2 },
   toggleGroup: { alignItems: 'flex-end' },
-  stockLabel: { ...typography.caption, fontWeight: '700', marginBottom: 4 },
+  stockLabel: { ...typography.caption, fontWeight: '700',
+    fontFamily: 'Nunito_700Bold', marginBottom: 4 },
 });

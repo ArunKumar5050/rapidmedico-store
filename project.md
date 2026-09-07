@@ -26,6 +26,7 @@
 17. [App Constants](#app-constants)
 18. [EAS / Build Config](#eas--build-config)
 19. [Known Patterns & Gotchas](#known-patterns--gotchas)
+20. [UI Design System & Screen Reference Guide](#ui-design-system--screen-reference-guide)
 
 ---
 
@@ -549,29 +550,60 @@ One channel registered in `orderAlertService.ts`:
 
 ## Theme & Design Tokens (`src/theme/tokens.ts`)
 
-### Colors
+### Colors (Medical Blue & Cyan Theme)
 ```ts
-colors.brand.primary       = '#006a47'  // emerald-deep
-colors.brand.primaryLight  = '#82f9c0'
-colors.action.accept       = '#10B981'  // emerald-lush
-colors.action.reject       = '#ba1a1a'  // error red
-colors.background.primary  = '#f2fcf4'  // surface-bright
-colors.background.sageTop  = '#F4F7F5'  // tab bar bg
-colors.text.primary        = '#151d19'
-colors.text.muted          = '#6d7a71'
+// Brand Palette
+colors.brand.primary       = '#0077B6'  // Ocean Blue — main brand & primary actions
+colors.brand.primaryLight  = '#90E0EF'  // Sky Blue — active toggle tracks, highlights
+colors.brand.primaryDark   = '#005A8E'  // Deep Anchor Blue — dark headings & emphasis
+colors.brand.secondary     = '#00B4D8'  // Vibrant Cyan — secondary accent & gradient start
+colors.brand.cyan          = '#90E0EF'  // Soft sky
+colors.brand.cyanMid       = '#00B4D8'  // Mid cyan
+colors.brand.cyanDeep      = '#0077B6'  // Deep ocean
+
+// Actions (Semantic)
+colors.action.accept       = '#10B981'  // Semantic green strictly for "Accept Order" & success
+colors.action.acceptPressed= '#059669'
+colors.action.reject       = '#DC2626'  // Red for "Reject Order" & destructive actions
+colors.action.rejectPressed= '#B91C1C'
+
+// Backgrounds
+colors.background.primary  = '#F0F7FF'  // Clean ice-blue canvas
+colors.background.secondary= '#E3F2FD'  // Soft blue surface
+colors.background.tertiary = '#DBEAFE'  // Deeper blue-light
+colors.background.sageTop  = '#F0F7FF'  // Tab bar & gradient top
+colors.background.sageBottom= '#D6EAF8' // Gradient bottom
+
+// Typography Text
+colors.text.primary        = '#0D1B2A'  // Near-black with deep blue tint
+colors.text.secondary      = '#3A5F7A'  // Muted blue-grey
+colors.text.muted          = '#7A9BB5'  // Light blue-grey
+colors.text.inverse        = '#FFFFFF'
+
+// Borders
+colors.border.default      = '#B3D4EA'  // Soft blue border
+colors.border.focus        = '#0077B6'  // Brand blue focus ring
+colors.border.glass        = 'rgba(255, 255, 255, 0.65)'
+
+// Status Badges
+colors.status.warning      = '#B45309'
+colors.status.warningLight = '#FEF3C7'
+colors.status.success      = '#10B981'
+colors.status.info         = '#0077B6'
+colors.status.neutral      = '#7A9BB5'
 ```
 
 ### Typography Scale
-| Key | Size | Weight |
-|---|---|---|
-| `display` | 48 | 800 |
-| `h1` | 32 | 700 |
-| `h2` | 28 | 700 |
-| `h3` | 20 | 600 |
-| `body` | 16 | 400 |
-| `bodyStrong` | 16 | 600 |
-| `caption` | 12 | 600 |
-| `button` | 18 | 400 |
+| Key | Size | Weight | Line Height |
+|---|---|---|---|
+| `display` | 48 | 800 | 56 |
+| `h1` | 32 | 700 | 40 |
+| `h2` | 28 | 700 | 36 |
+| `h3` | 20 | 600 | 28 |
+| `body` | 16 | 400 | 24 |
+| `bodyStrong` | 16 | 600 | 24 |
+| `caption` | 12 | 600 | 16 |
+| `button` | 18 | 400 | 28 |
 
 ### Spacing Scale
 `xs=4`, `sm=8`, `md=12`, `lg=16`, `xl=20`, `xxl=24`, `xxxl=32`, `huge=64`
@@ -579,7 +611,7 @@ colors.text.muted          = '#6d7a71'
 ### Component Defaults
 - Button primary min-height: `56` | Border radius: `14`
 - Card border radius: `24` | padding: `24`
-- Shadows: `sm` (elevation 2), `md` (elevation 4, green-tinted), `lg` (elevation 8, green-tinted)
+- Shadows: `sm` (elevation 2, `#0077B6`), `md` (elevation 4, `#0077B6`), `lg` (elevation 8, `#005A8E` blue-tinted)
 
 ---
 
@@ -745,6 +777,153 @@ npm run ts.check
 | `RatingsScreen` | profile | Customer ratings (stub) |
 | `SupportScreen` | support | Contact support |
 | `AnnouncementsScreen` | support | Platform announcements |
+
+---
+
+## UI Design System & Screen Reference Guide
+
+> **Aesthetic Standard:** The RapidMedico Store app features a **premium, trustworthy, and modern medical blue & cyan design system** inspired by leading healthcare platforms (such as Medix).  
+> All screens, components, modals, and navigation elements must strictly adhere to these visual and semantic rules.
+
+---
+
+### 1. Color System & Semantic Guidelines
+
+| Role | Color / Gradient | Token / Value | Usage & Rules |
+|---|---|---|---|
+| **Primary Brand** | Ocean Blue | `colors.brand.primary` (`#0077B6`) | Headers, primary CTA buttons, active icons, focus rings, stepper active rings |
+| **Secondary Accent** | Vibrant Cyan | `colors.brand.secondary` (`#00B4D8`) | Gradient starts, subtle highlights, active toggles, action cards |
+| **Dark Heading** | Deep Navy | `colors.brand.primaryDark` (`#005A8E`) | Main card titles, hero typography, active badge text |
+| **Light Tint** | Soft Sky Blue | `colors.brand.primaryLight` (`#90E0EF`) | Active switch tracks, soft banner accents |
+| **Canvas Background** | Ice Blue Canvas | `colors.background.primary` (`#F0F7FF`) | Root screen background (`SafeAreaView`) |
+| **Surface Background** | Light Ice Surface | `colors.background.secondary` (`#E3F2FD`) | Secondary card surfaces, chip backgrounds |
+| **Primary Action Gradient** | Cyan → Ocean Blue | `['#00B4D8', '#0077B6']` (start: `{x:0, y:0}`, end: `{x:1, y:1}`) | Standard for ALL primary buttons (Login, Update Bill, Start Preparing, Request Delivery) |
+| **Semantic Accept / Success** | Emerald Green | `colors.action.accept` (`#10B981`) | **STRICT RULE:** Reserved EXCLUSIVELY for "Accept Order", "Delivered / Handed Over", and verified statuses |
+| **Semantic Reject / Destructive** | Signal Red | `colors.action.reject` (`#DC2626`) | **STRICT RULE:** Reserved EXCLUSIVELY for "Reject Order", "Cancel", and "Log Out" |
+| **Borders & Dividers** | Soft Blue Tint | `rgba(0, 119, 182, 0.08)` to `0.12` | Subtle borders for cards, list items, and dividing lines |
+| **Shadows** | Blue Elevation | `shadowColor: '#0077B6'` / `colors.brand.primary` | Soft, elevated drop shadows with blue tint (elevation 2 to 8) |
+
+> ⚠️ **CRITICAL RULE ON GREEN VS BLUE:**  
+> Green (`#10B981`) was formerly the app brand color, but was intentionally replaced. **Never** use green for general brand elements, tabs, steppers, or non-accept buttons. Green is now strictly semantic for successful order acceptance and positive status tags.
+
+---
+
+### 2. Standard Component Specifications
+
+#### A. Screen Scaffold & Backgrounds
+- Standard screens use:
+  ```tsx
+  <SafeAreaView style={{ flex: 1, backgroundColor: colors.background.primary }}>
+  ```
+- Auth screens and hero headers use multi-stop gradients with blurred ambient decorative orbs:
+  ```tsx
+  <LinearGradient
+    colors={['#EAF6FF', '#CAF0F8', '#90E0EF']}
+    style={StyleSheet.absoluteFill}
+  />
+  ```
+
+#### B. Cards & Containers
+- White surfaces (`#FFFFFF`) or frosted glass (`rgba(255, 255, 255, 0.85-0.92)`).
+- Border radius: `16` to `24` px.
+- 1px border: `borderWidth: 1, borderColor: 'rgba(0, 119, 182, 0.1)'`.
+- Soft blue drop shadow:
+  ```tsx
+  shadowColor: colors.brand.primary,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.08,
+  shadowRadius: 16,
+  elevation: 3,
+  ```
+
+#### C. Buttons & CTAs
+- **Primary Action Button**:
+  Must use `LinearGradient` from Cyan (`#00B4D8`) to Ocean Blue (`#0077B6`), rounded corners (`borderRadius: 14`), height `50-56`, bold white typography (`#FFFFFF`).
+  ```tsx
+  <TouchableOpacity style={styles.btnWrapper} activeOpacity={0.85} onPress={handlePress}>
+    <LinearGradient
+      colors={[colors.brand.secondary, colors.brand.primary]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.btnGradient}
+    >
+      <Text style={styles.btnText}>ACTION TITLE 🚀</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+  ```
+- **Accept Button**: Variant `accept` with solid `#10B981` or green gradient.
+- **Reject / Cancel Button**: Variant `reject` with solid `#DC2626` or outline with red border and `#DC2626` text.
+
+#### D. Tab Bar & Navigation
+- White background (`#FFFFFF`) with top border `rgba(0, 119, 182, 0.1)`.
+- Active tab icons: Tinted with `colors.brand.primary` (`#0077B6`).
+- Central or home tab: Elevated circular filled badge when active.
+
+#### E. Pill Tabs & Filters
+- Inactive pills: White `#FFFFFF` or light grey `#F3F4F6` with muted text (`#3A5F7A`).
+- Active pills: Cyan-to-blue gradient fill with white bold text (`#FFFFFF`) and subtle blue shadow.
+
+#### F. Steppers & Lifecycle Progress
+- **Completed Step**: Circle filled with `colors.brand.primary` (`#0077B6`) and white icon/text.
+- **Active Step**: Circle filled with `#E0F2FE` with 2px `colors.brand.primary` border and blue text.
+- **Pending Step**: Circle filled with `#F9FAFB` with grey border `#D1D5DB`.
+
+#### G. Form Inputs & Search Bars
+- Background: Pure white `#FFFFFF`.
+- Default border: `colors.border.default` (`#B3D4EA`).
+- Focused border: `colors.brand.primary` (`#0077B6`) with subtle blue shadow.
+- Corner radius: `12` to `16` px.
+- Left decorator: Dedicated icon (MaterialIcons or Ionicons) tinted `#7A9BB5` or `#0077B6`.
+
+#### H. Switches & Toggles
+- `trackColor={{ false: colors.background.tertiary, true: colors.brand.primaryLight }}` (`#90E0EF`)
+- `thumbColor={isActive ? colors.brand.primary : '#999999'}`
+
+---
+
+### 3. Screen Design Blueprints
+
+#### 1. Authentication (`LoginScreen`, `OtpVerificationScreen`, `StoreRegistrationScreen`)
+- **Look & Feel**: Sky-to-ocean gradient canvas (`#EAF6FF` → `#CAF0F8` → `#90E0EF`) with soft blurred ambient orbs in background.
+- **Card**: Glassmorphism with `BlurView intensity={70}` and crisp white translucent border `rgba(255, 255, 255, 0.7)`.
+- **Inputs**: Icon on the left, clear typography, and a full-width cyan-to-ocean gradient submit button.
+
+#### 2. Dashboard (`DashboardScreen`)
+- **Header**: Store name and avatar circle with greeting and quick availability toggle.
+- **Hero Stats**: Rich gradient card (`#0096C7` → `#0077B6` → `#005A8E`) showing live today's revenue, active orders count, and preparation times.
+- **Quick Action Grid**: 3-column white card grid (Active Orders, Inventory, Reports) with blue icon wrappers and badge counters.
+- **Tip / Alert Bar**: Soft blue container (`#E0F2FE`) with brand blue text.
+
+#### 3. Orders Management (`OrdersScreen`, `OrderDetailsScreen`)
+- **Pill Filters**: Segmented filter for All, New, Preparing, Ready, Dispatched.
+- **Order Cards**: Crisp white cards with a 4px left-accent vertical blue bar (`#0077B6`), circular order number badge, patient details, and prescription indicator.
+- **Operational Stepper**: 4-step linear status tracking (New → Preparing → Ready → Dispatched).
+- **Bill Editing**: Item cards with blue numbered index pills, quantity stepper, and price input.
+- **Pickup OTP Verification**: Special card with 2px blue border, soft blue badge circle, and 4-digit PIN input with letter spacing.
+- **Floating Action Dock**: Fixed bottom bar with blurred background and action buttons.
+
+#### 4. Inventory (`InventoryScreen`)
+- Clean white header with live item count badge.
+- Search input with blue focus ring.
+- Card list of medicines with in-stock / out-of-stock switches using cyan tracks.
+
+#### 5. Profile & Settings (`ProfileScreen`, `WorkingHoursScreen`, `StoreSettingsScreen`)
+- Hero oceanic gradient banner with pharmacy license badge and store ID.
+- Store info pill strip (City, Category, Status).
+- Grouped white card menu items with dedicated colored icon boxes and chevron buttons.
+
+---
+
+### 4. Developer Checklist for New Features & Screens
+
+When adding any new screen or UI element to `rapidmedico-store`:
+- [ ] Import tokens from `src/theme/tokens.ts`: `import { colors, typography, spacing } from '../../../theme/tokens';`
+- [ ] Use `colors.brand.primary` (`#0077B6`) for brand highlights and primary actions.
+- [ ] Use `LinearGradient` with `[colors.brand.secondary, colors.brand.primary]` for primary CTA buttons.
+- [ ] Use `colors.background.primary` (`#F0F7FF`) for screen backgrounds.
+- [ ] Avoid raw hex colors in style sheets; use theme tokens or blue-tinted alpha values (e.g. `rgba(0, 119, 182, 0.08)`).
+- [ ] Never use green for anything other than successful order acceptance or positive delivery statuses.
+- [ ] Run `npm run ts.check` (`npx tsc --noEmit`) to ensure complete type safety with zero errors.
 
 ---
 

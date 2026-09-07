@@ -122,8 +122,9 @@ const styles = StyleSheet.create({
   docRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.default },
   docName: { ...typography.bodyStrong, color: colors.text.primary },
   expiryText: { ...typography.caption, color: colors.text.secondary },
-  rejectionReason: { ...typography.caption, color: colors.action.reject, fontWeight: '600', marginTop: 2 },
+  rejectionReason: { ...typography.caption, color: colors.action.reject, fontWeight: '600',
+    fontFamily: 'Nunito_600SemiBold', marginTop: 2 },
   reuploadBtn: { marginTop: spacing.xs },
-  reuploadText: { ...typography.caption, color: colors.brand.primary, fontWeight: '700' },
+  reuploadText: { ...typography.caption, color: colors.brand.primary, fontWeight: '700', fontFamily: 'Nunito_700Bold' },
   devBtn: { marginTop: spacing.md },
 });

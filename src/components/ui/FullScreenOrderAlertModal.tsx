@@ -96,7 +96,7 @@ export const FullScreenOrderAlertModal: React.FC<FullScreenOrderAlertModalProps>
             <View style={styles.itemsList}>
               {order.items.map((i, idx) => (
                 <Text key={idx} style={styles.itemBullet}>
-                  • {i.name}  <Text style={{ fontWeight: '700' }}>x{i.quantity}</Text>
+                  • {i.name}  <Text style={{ fontWeight: '700', fontFamily: 'Nunito_700Bold' }}>x{i.quantity}</Text>
                 </Text>
               ))}
             </View>
@@ -131,7 +131,7 @@ export const FullScreenOrderAlertModal: React.FC<FullScreenOrderAlertModalProps>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.alert.urgentLight,
+    backgroundColor: '#FFF1F2',
   },
   header: {
     padding: spacing.lg,
@@ -154,14 +154,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   timerContainer: {
-    backgroundColor: colors.background.primary,
+    backgroundColor: '#F0F7FF',
     padding: spacing.lg,
     borderRadius: 16,
     alignItems: 'center',
     width: '100%',
     marginBottom: spacing.xl,
     borderWidth: 2,
-    borderColor: colors.border.default,
+    borderColor: '#B3D4EA',
   },
   timerUrgent: {
     borderColor: colors.alert.urgent,
@@ -182,10 +182,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   detailsCard: {
-    backgroundColor: colors.background.primary,
+    backgroundColor: '#F0F7FF',
     padding: spacing.lg,
     borderRadius: 16,
     width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(0,119,182,0.1)',
   },
   detailRow: {
     ...typography.body,
@@ -196,6 +198,7 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: colors.text.primary,
     fontWeight: '700',
+    fontFamily: 'Nunito_700Bold',
     marginBottom: spacing.xs,
   },
   itemsList: {

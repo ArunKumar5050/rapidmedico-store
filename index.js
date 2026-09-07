@@ -1,3 +1,4 @@
+import './src/theme/globalFont';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { registerRootComponent } from 'expo';
