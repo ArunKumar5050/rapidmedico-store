@@ -5,7 +5,6 @@ import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
-import { getAnalytics, isSupported } from 'firebase/analytics';
 import Constants from 'expo-constants';
 
 const extra = Constants.expoConfig?.extra || {};
@@ -31,17 +30,9 @@ try {
   authInstance = getAuth(app);
 }
 
-let analyticsInstance: any = null;
-isSupported().then((supported) => {
-  if (supported) {
-    analyticsInstance = getAnalytics(app);
-  }
-}).catch(() => {});
-
 export const auth = authInstance;
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
-export const analytics = analyticsInstance;
 
 export default app;

@@ -181,6 +181,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     }
   };
 
+
   const hasSavedPrices = Boolean(
     order?.totalAmount &&
     order.totalAmount > 100 &&
@@ -238,6 +239,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
   );
 
   const handleUpdateBill = async () => {
+
     let isValid = true;
     const updatedItems = editableItems.map(item => {
       const p = parseFloat(item.price);
@@ -253,11 +255,14 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
     });
 
     if (!isValid || updatedItems.length === 0) {
+
       Alert.alert('Missing Info', 'Please ensure all medicines have a valid name, quantity, and price greater than ₹0.');
+
       return;
     }
 
     if (!storeId) {
+
       Alert.alert('Error', 'Store ID is not available.');
       return;
     }
@@ -360,6 +365,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
 
   const statusConfig = getStatusBadgeConfig();
   const assignedTime = order.assignedAt ? new Date(order.assignedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
 
   return (
     <LinearGradient colors={[colors.background.sageTop, colors.background.sageBottom]} style={styles.container}>
@@ -772,6 +778,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
           <View style={{ height: 140 }} />
         </ScrollView>
 
+
         {/* Floating Action Dock (Footer) */}
         <BlurView intensity={95} tint="light" style={styles.footerDock}>
           <View style={styles.footerInner}>
@@ -807,10 +814,12 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                     style={styles.gradientInner}
                   >
                     <Text style={styles.btnPrimaryText}>Update Bill 🧾</Text>
+
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
             )}
+
 
             {/* STATE 2: Bill Saved & Waiting for Payment / COD */}
             {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && !isPaid && (
@@ -821,9 +830,19 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
                 >
                   <Text style={styles.btnEditBillText}>✏️ Edit Bill</Text>
                 </TouchableOpacity>
-                <View style={styles.btnDisabledWaiting}>
-                  <Text style={styles.btnDisabledWaitingText}>Waiting for Payment / COD ⏳</Text>
-                </View>
+                <TouchableOpacity
+                  style={[styles.btnFullWidth, { flex: 1, marginLeft: 8, opacity: 0.5 }]}
+                  disabled={true}
+                >
+                  <LinearGradient
+                    colors={['#9ca3af', '#6b7280']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientInner}
+                  >
+                    <Text style={[styles.btnPrimaryText, { fontSize: 13 }]}>Waiting for Payment...</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -846,6 +865,7 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             )}
 
             {/* STATE 4: Preparing -> Mark as Packed & Ready */}
+
             {currentStatus === OrderStatus.Preparing && (
               <TouchableOpacity
                 style={styles.btnFullWidth}

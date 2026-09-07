@@ -195,6 +195,7 @@ export class FirestoreService {
       items: orderItems,
       prescriptionUrls: pUrls,
       totalAmount: data.billAmount || data.price || data.totalAmount,
+      billGeneratedAt: data.billGeneratedAt,
       assignedAt: assignedAtIso,
       respondByAt: respondByAtIso,
       paymentStatus: resolvedPaymentStatus,
@@ -219,7 +220,6 @@ export class FirestoreService {
   static subscribeOrder(orderId: string, onUpdate: (order: StoreOrder | null) => void) {
     const customRef = doc(db, 'customOrders', orderId);
     const orderRef = doc(db, 'orders', orderId);
-    
     let currentCustom: StoreOrder | null = null;
     let currentOrder: StoreOrder | null = null;
 
@@ -231,14 +231,18 @@ export class FirestoreService {
         onUpdate(currentOrder);
       } else if (currentCustom) {
         onUpdate(currentCustom);
+      } else {
+        onUpdate(null);
       }
     };
 
     const unsubCustom = onSnapshot(customRef, (snap) => {
       if (snap.exists()) {
         currentCustom = FirestoreService.mapDocToStoreOrder(snap.id, snap.data(), 'customOrders');
-        emit();
+      } else {
+        currentCustom = null;
       }
+      emit();
     }, (error) => {
       console.warn('[FirestoreService] subscribeOrder custom error:', error);
     });
@@ -246,8 +250,10 @@ export class FirestoreService {
     const unsubOrder = onSnapshot(orderRef, (snap) => {
       if (snap.exists()) {
         currentOrder = FirestoreService.mapDocToStoreOrder(snap.id, snap.data(), 'orders');
-        emit();
+      } else {
+        currentOrder = null;
       }
+      emit();
     }, (error) => {
       console.warn('[FirestoreService] subscribeOrder normal error:', error);
     });
@@ -263,8 +269,8 @@ export class FirestoreService {
     const customOrdersCol = collection(db, 'customOrders');
     const ordersCol = collection(db, 'orders');
     
-    const qCustom = query(customOrdersCol, limit(100));
-    const qOrders = query(ordersCol, limit(100));
+    const qCustom = query(customOrdersCol, orderBy('createdAt', 'desc'), limit(100));
+    const qOrders = query(ordersCol, orderBy('createdAt', 'desc'), limit(100));
     
     let customOrdersList: StoreOrder[] = [];
     let ordersList: StoreOrder[] = [];
