@@ -71,9 +71,9 @@
     ],
     "extra": {
       "firebaseApiKey": "AIzaSyDoqbjpy3pFiuvMCBhxffJH27bHBNaKTTA",
-      "firebaseAuthDomain": "rapidmedico.firebaseapp.com",
-      "firebaseProjectId": "rapidmedico",
-      "firebaseStorageBucket": "rapidmedico.firebasestorage.app",
+      "firebaseAuthDomain": "rapidmedi.firebaseapp.com",
+      "firebaseProjectId": "rapidmedi",
+      "firebaseStorageBucket": "rapidmedi.firebasestorage.app",
       "firebaseMessagingSenderId": "553213794552",
       "firebaseAppId": "1:553213794552:web:db1bdac54f2a80d791430d",
       "firebaseMeasurementId": "G-71EYHYR629",

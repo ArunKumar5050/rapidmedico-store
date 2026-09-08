@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   Alert, TouchableOpacity, Dimensions,
@@ -27,11 +27,45 @@ const C = {
   glassBorder: 'rgba(255, 255, 255, 0.7)',
 };
 
+const CustomTextInput = React.forwardRef(({
+  label,
+  iconName,
+  ...props
+}: any, ref: any) => {
+  const [isFocused, setIsFocused] = useState(false);
+
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={[styles.inputWrapper, {
+        borderColor: isFocused ? '#0077B6' : '#B3D4EA',
+        backgroundColor: isFocused ? 'rgba(255,255,255,0.95)' : 'rgba(240, 247, 255, 0.8)',
+      }]}>
+        <MaterialIcons name={iconName} size={18} color={isFocused ? C.primaryBlue : C.outline} style={styles.inputIcon} />
+        <TextInput
+          ref={ref}
+          style={styles.input}
+          placeholderTextColor={C.outline}
+          onFocus={(e) => {
+            setIsFocused(true);
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            props.onBlur?.(e);
+          }}
+          {...props}
+        />
+      </View>
+    </View>
+  );
+});
+
 export const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
   const { setStore, setAuthUser } = useAuthStore();
 
   const handleLogin = async () => {
@@ -43,7 +77,49 @@ export const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       const user = await AuthService.loginWithEmail(email.trim(), password);
-      const existingStore = await FirestoreService.getStoreProfile(user.uid);
+      
+      let storeUser = null;
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          storeUser = await FirestoreService.getStoreUser(user.uid);
+          break; // Success
+        } catch (err: any) {
+          if (err.message?.includes('offline') && retries > 1) {
+            console.log('Firestore offline, retrying in 2 seconds...');
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            retries--;
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      if (!storeUser || !['OWNER', 'store', 'medical-store', 'MANAGER', 'STAFF'].includes(storeUser.role)) {
+        Alert.alert('Access Denied', 'Your account does not have store access.');
+        // Make sure to log out the user if access is denied
+        await AuthService.logout();
+        return;
+      }
+
+      const storeId = storeUser.storeId || user.uid;
+      
+      let existingStore = null;
+      retries = 3;
+      while (retries > 0) {
+        try {
+          existingStore = await FirestoreService.getStoreProfile(storeId);
+          break;
+        } catch (err: any) {
+          if (err.message?.includes('offline') && retries > 1) {
+            console.log('Firestore offline, retrying in 2 seconds...');
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            retries--;
+          } else {
+            throw err;
+          }
+        }
+      }
 
       if (existingStore) {
         setAuthUser(user.uid, email.trim());
@@ -108,7 +184,7 @@ export const LoginScreen = ({ navigation }: any) => {
 
           {/* Glass Card */}
           <View style={styles.glassWrapper}>
-            <BlurView intensity={70} tint="light" style={styles.glassCard}>
+            <View style={[styles.glassCard, { backgroundColor: 'rgba(255,255,255,0.72)' }]}>
 
               {/* Card Header */}
               <View style={styles.cardHeader}>
@@ -119,41 +195,37 @@ export const LoginScreen = ({ navigation }: any) => {
               {/* Form */}
               <View style={styles.formContainer}>
                 {/* Email */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>EMAIL ADDRESS</Text>
-                  <View style={[styles.inputWrapper, focusedInput === 'email' && styles.inputWrapperFocused]}>
-                    <MaterialIcons name="email" size={18} color={focusedInput === 'email' ? C.primaryBlue : C.outline} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="owner@pharmacy.com"
-                      placeholderTextColor={C.outline}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      value={email}
-                      onChangeText={setEmail}
-                      onFocus={() => setFocusedInput('email')}
-                      onBlur={() => setFocusedInput(null)}
-                    />
-                  </View>
-                </View>
+                <CustomTextInput
+                  label="EMAIL ADDRESS"
+                  iconName="email"
+                  placeholder="owner@pharmacy.com"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onSubmitEditing={() => {
+                    if (email.trim().length > 0) {
+                      passwordRef.current?.focus();
+                    }
+                  }}
+                />
 
                 {/* Password */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>PASSWORD</Text>
-                  <View style={[styles.inputWrapper, focusedInput === 'password' && styles.inputWrapperFocused]}>
-                    <MaterialIcons name="lock" size={18} color={focusedInput === 'password' ? C.primaryBlue : C.outline} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="••••••••"
-                      placeholderTextColor={C.outline}
-                      secureTextEntry
-                      value={password}
-                      onChangeText={setPassword}
-                      onFocus={() => setFocusedInput('password')}
-                      onBlur={() => setFocusedInput(null)}
-                    />
-                  </View>
-                </View>
+                <CustomTextInput
+                  ref={passwordRef}
+                  label="PASSWORD"
+                  iconName="lock"
+                  placeholder="••••••••"
+                  secureTextEntry
+                  autoComplete="current-password"
+                  value={password}
+                  onChangeText={setPassword}
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
+                />
 
                 {/* Login Button */}
                 <TouchableOpacity
@@ -193,7 +265,7 @@ export const LoginScreen = ({ navigation }: any) => {
                   <Text style={styles.registerLinkTextBold}>Register your store</Text>
                 </Text>
               </TouchableOpacity>
-            </BlurView>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -332,7 +404,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 4,
   },
   inputIcon: {
     marginRight: 10,

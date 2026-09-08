@@ -38,46 +38,5 @@ export const getNunitoFontFamily = (style: any): string => {
   }
 };
 
-// Global monkey-patch for React Native's Text & TextInput in Metro
-try {
-  const TextModule = require('react-native/Libraries/Text/Text');
-  const OriginalText = TextModule.default;
-  if (OriginalText && !(OriginalText as any).__isNunitoPatched) {
-    const PatchedText = React.forwardRef((props: any, ref: any) => {
-      const resolvedFont = getNunitoFontFamily(props?.style);
-      const combinedStyle = [{ fontFamily: resolvedFont }, props?.style];
-      return React.createElement(OriginalText, {
-        ...props,
-        style: combinedStyle,
-        ref,
-      });
-    });
-    (PatchedText as any).__isNunitoPatched = true;
-    // Preserve static properties if any
-    Object.assign(PatchedText, OriginalText);
-    TextModule.default = PatchedText;
-  }
-} catch (e) {
-  console.warn('[GlobalFont] Notice: Could not patch TextModule:', e);
-}
-
-try {
-  const TextInputModule = require('react-native/Libraries/Components/TextInput/TextInput');
-  const OriginalTextInput = TextInputModule.default;
-  if (OriginalTextInput && !(OriginalTextInput as any).__isNunitoPatched) {
-    const PatchedTextInput = React.forwardRef((props: any, ref: any) => {
-      const resolvedFont = getNunitoFontFamily(props?.style);
-      const combinedStyle = [{ fontFamily: resolvedFont }, props?.style];
-      return React.createElement(OriginalTextInput, {
-        ...props,
-        style: combinedStyle,
-        ref,
-      });
-    });
-    (PatchedTextInput as any).__isNunitoPatched = true;
-    Object.assign(PatchedTextInput, OriginalTextInput);
-    TextInputModule.default = PatchedTextInput;
-  }
-} catch (e) {
-  console.warn('[GlobalFont] Notice: Could not patch TextInputModule:', e);
-}
+// Global monkey-patching has been removed because it causes crashes in newer React Native versions.
+// Please use the AppText component instead.

@@ -12,9 +12,27 @@ export const useAuth = () => {
       if (user) {
         // Support both Email/Password and Phone auth users
         const identifier = user.email || user.phoneNumber || user.uid;
-        setAuthUser(user.uid, identifier);
-        const storeProfile = await FirestoreService.getStoreProfile(user.uid);
-        setStore(storeProfile);
+        
+        let activeStoreId = user.uid;
+        try {
+          const storeUser = await FirestoreService.getStoreUser(user.uid);
+          if (storeUser && storeUser.storeId) {
+            activeStoreId = storeUser.storeId;
+          }
+        } catch (err) {
+          console.warn('[useAuth] Failed to fetch store_user mapping:', err);
+        }
+
+        setAuthUser(activeStoreId, identifier);
+        
+        let storeProfile = null;
+        try {
+          storeProfile = await FirestoreService.getStoreProfile(activeStoreId);
+          setStore(storeProfile);
+        } catch (err) {
+          console.warn('[useAuth] Failed to fetch store profile:', err);
+          setStore(null);
+        }
 
         // Fetch and save Push Token for Option B setup
         try {

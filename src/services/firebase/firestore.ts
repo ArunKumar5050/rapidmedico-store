@@ -224,15 +224,15 @@ export class FirestoreService {
     let currentOrder: StoreOrder | null = null;
 
     const emit = () => {
-      // Prioritize customOrders when it exists and has items
-      if (currentCustom && currentCustom.items && currentCustom.items.length > 0) {
+      // Prioritize customOrders when it exists and is not a shadow document
+      const isCustomShadow = currentCustom && currentOrder && !currentCustom.totalAmount && currentOrder.totalAmount;
+      
+      if (currentCustom && !isCustomShadow) {
         onUpdate(currentCustom);
       } else if (currentOrder) {
         onUpdate(currentOrder);
-      } else if (currentCustom) {
-        onUpdate(currentCustom);
       } else {
-        onUpdate(null);
+        onUpdate(currentCustom || null);
       }
     };
 
@@ -292,7 +292,13 @@ export class FirestoreService {
       // Prioritize customOrders because it has complete itemized bill and prescription data
       const orderMap = new Map<string, StoreOrder>();
       ordersList.forEach(o => orderMap.set(o.id, o));
-      customOrdersList.forEach(o => orderMap.set(o.id, o));
+      customOrdersList.forEach(o => {
+        const existing = orderMap.get(o.id);
+        if (existing && !o.totalAmount && existing.totalAmount) {
+          return; // Skip shallow shadow documents created by delivery app
+        }
+        orderMap.set(o.id, o);
+      });
       
       let combined = Array.from(orderMap.values());
       
@@ -317,11 +323,15 @@ export class FirestoreService {
     const unsubCustom = onSnapshot(qCustom, (snapshot) => {
       customOrdersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'customOrders'));
       emitUpdate();
+    }, (error) => {
+      console.error('[FirestoreService] subscribeActiveOrders (customOrders) error:', error);
     });
 
     const unsubOrders = onSnapshot(qOrders, (snapshot) => {
       ordersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'orders'));
       emitUpdate();
+    }, (error) => {
+      console.error('[FirestoreService] subscribeActiveOrders (orders) error:', error);
     });
 
     return () => {
@@ -334,13 +344,8 @@ export class FirestoreService {
     const customOrdersCol = collection(db, 'customOrders');
     const ordersCol = collection(db, 'orders');
 
-    const qCustom = storeId 
-      ? query(customOrdersCol, where('storeId', '==', storeId), limit(50))
-      : query(customOrdersCol, limit(50));
-      
-    const qOrders = storeId 
-      ? query(ordersCol, where('storeId', '==', storeId), limit(50))
-      : query(ordersCol, limit(50));
+    const qCustom = query(customOrdersCol, orderBy('createdAt', 'desc'), limit(50));
+    const qOrders = query(ordersCol, orderBy('createdAt', 'desc'), limit(50));
       
     let customOrdersList: StoreOrder[] = [];
     let ordersList: StoreOrder[] = [];
@@ -348,7 +353,13 @@ export class FirestoreService {
     const emitUpdate = () => {
       const orderMap = new Map<string, StoreOrder>();
       ordersList.forEach(o => orderMap.set(o.id, o));
-      customOrdersList.forEach(o => orderMap.set(o.id, o));
+      customOrdersList.forEach(o => {
+        const existing = orderMap.get(o.id);
+        if (existing && !o.totalAmount && existing.totalAmount) {
+          return; // Skip shallow shadow documents created by delivery app
+        }
+        orderMap.set(o.id, o);
+      });
 
       let combined = Array.from(orderMap.values());
       
@@ -361,11 +372,15 @@ export class FirestoreService {
     const unsubCustom = onSnapshot(qCustom, (snapshot) => {
       customOrdersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'customOrders'));
       emitUpdate();
+    }, (error) => {
+      console.error('[FirestoreService] subscribeOrderHistory (customOrders) error:', error);
     });
 
     const unsubOrders = onSnapshot(qOrders, (snapshot) => {
       ordersList = snapshot.docs.map((docSnap) => FirestoreService.mapDocToStoreOrder(docSnap.id, docSnap.data(), 'orders'));
       emitUpdate();
+    }, (error) => {
+      console.error('[FirestoreService] subscribeOrderHistory (orders) error:', error);
     });
 
     return () => {

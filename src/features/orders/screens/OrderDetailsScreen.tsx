@@ -821,47 +821,36 @@ export const OrderDetailsScreen = ({ route, navigation }: any) => {
             )}
 
 
-            {/* STATE 2: Bill Saved & Waiting for Payment / COD */}
-            {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && !isPaid && (
+            {/* STATE 2 & 3: Bill Saved -> Start Preparing (Disabled until paid/COD) */}
+            {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && (
               <View style={styles.buttonRow}>
+                {!isPaid && (
+                  <TouchableOpacity
+                    style={styles.btnEditBill}
+                    onPress={() => setIsEditingBill(true)}
+                  >
+                    <Text style={styles.btnEditBillText}>✏️ Edit Bill</Text>
+                  </TouchableOpacity>
+                )}
+                
                 <TouchableOpacity
-                  style={styles.btnEditBill}
-                  onPress={() => setIsEditingBill(true)}
-                >
-                  <Text style={styles.btnEditBillText}>✏️ Edit Bill</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.btnFullWidth, { flex: 1, marginLeft: 8, opacity: 0.5 }]}
-                  disabled={true}
+                  style={[styles.btnFullWidth, { flex: 1, marginLeft: !isPaid ? 8 : 0, opacity: isPaid ? 1 : 0.6 }]}
+                  activeOpacity={0.85}
+                  onPress={isPaid ? handlePrimaryAction : undefined}
+                  disabled={!isPaid}
                 >
                   <LinearGradient
-                    colors={['#9ca3af', '#6b7280']}
+                    colors={isPaid ? [colors.brand.secondary, colors.brand.primary] : ['#9ca3af', '#6b7280']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientInner}
                   >
-                    <Text style={[styles.btnPrimaryText, { fontSize: 13 }]}>Waiting for Payment...</Text>
+                    <Text style={[styles.btnPrimaryText, !isPaid && { fontSize: 14 }]}>
+                      {isPaid ? 'Start Preparing Order 🚀' : 'Start Preparing (Awaiting Payment)'}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
-            )}
-
-            {/* STATE 3: Bill Saved & Paid / COD -> Start Preparing */}
-            {!isPriceInputEditable && (currentStatus === OrderStatus.New || isAcceptedState) && isPaid && (
-              <TouchableOpacity
-                style={styles.btnFullWidth}
-                activeOpacity={0.85}
-                onPress={handlePrimaryAction}
-              >
-                <LinearGradient
-                  colors={[colors.brand.secondary, colors.brand.primary]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.gradientInner}
-                >
-                  <Text style={styles.btnPrimaryText}>Start Preparing Order 🚀</Text>
-                </LinearGradient>
-              </TouchableOpacity>
             )}
 
             {/* STATE 4: Preparing -> Mark as Packed & Ready */}
